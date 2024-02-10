@@ -20,7 +20,7 @@ def create_user():
         user=User(**serializer.model_dump())
         db.session.add(user)
         db.session.commit()
-        return {"message": "user registered", "status" : 201, "data" : user.json}
+        return {"message": "user registered",'token': user.token('register', 60), "status" : 201, "data" : user.json}
     except ValidationError as e:
         err = json.loads(e.json())
         return {'message': f'{err[0]['input']}-{err[0]['msg']}', "status": 400}, 400
@@ -36,4 +36,22 @@ def login_user():
         return {"message" : "Username or Password is incorrect"}, 401
     except ValidationError as e:
         return {'message': 'Invalid username'}, 400
+
+
+@app.get("/verify")
+def verify_user():
+    try:
+        token=request.args.get('token')
+        if not token:
+            return {'message': 'Token not found'}, 400
+        decoded=JWT.to_decode(token,"register")
+        user_id=decoded["user_id"]
+        user=User.query.filter_by(id=user_id).first()
+        if not user:
+            return {'message': 'User not found'}, 400
+        user.is_verified=True
+        db.session.commit()
+        return {"message": "User verified successfully"},200
+    except Exception as e:
+        return {"message": "Something went wrong"},400
 

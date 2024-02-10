@@ -29,6 +29,9 @@ class User(db.Model):
         if aud:
             payload.update({'aud': aud})
         return JWT.to_encode(payload)
+            
+
+
 
     @property
     def json(self):
