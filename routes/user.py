@@ -1,9 +1,10 @@
 from core import db, init_app
-from flask import request
+from flask import request,jsonify
 from core.models import User
 from schemas.user_schemas import UserSchema, UsernameValidator
 from pydantic import ValidationError
 import json
+
 
 app = init_app()
 
@@ -29,9 +30,9 @@ def login_user():
     try:
         serializer = UsernameValidator(username=data['username'])
         user=User.query.filter_by(username=data['username']).first()
-        if not user and user.password==data['password']:
-            return {"message" : "Username or Password is incorrect"}, 401
-        return {"message":" User logged in successfully"}, 200
+        if user and user.verify_password(data['password']):
+            return {"message":" User logged in successfully"}, 200
+        return {"message" : "Username or Password is incorrect"}, 401
     except ValidationError as e:
         return {'message': 'Invalid username'}, 400
 
