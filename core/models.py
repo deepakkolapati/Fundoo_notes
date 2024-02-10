@@ -1,6 +1,8 @@
 from core import db
 from flask import jsonify
 from passlib.hash import pbkdf2_sha256
+from .utils import JWT
+from datetime import datetime, timedelta
 
 
 class User(db.Model):
@@ -21,6 +23,12 @@ class User(db.Model):
 
     def verify_password(self, raw_password):
         return pbkdf2_sha256.verify(raw_password, self.password)
+    
+    def token(self, aud=None, exp=15):
+        payload = {'user_id': self.id, 'exp': datetime.utcnow() + timedelta(minutes=exp)}
+        if aud:
+            payload.update({'aud': aud})
+        return JWT.to_encode(payload)
 
     @property
     def json(self):
