@@ -6,9 +6,10 @@ class Settings(BaseSettings):
 
     sender: str
     mail_password: str
-    database_uri: str
+    database_uri: str   
     mail_port: int
     base_url: str
+    
 
 
 settings = Settings()
