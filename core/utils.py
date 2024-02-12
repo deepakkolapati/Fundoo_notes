@@ -31,7 +31,7 @@ Verification Link: {f'{settings.base_url}/verify?token={token}'}
 
 This verification step ensures the security of your account and helps us keep our community safe. If you didn't create an account with Fundoo_Notes, please ignore this email.
 
-Thank you for choosing Fundoo_Notes! If you have any questions or need assistance, feel free to reach out to our support team at deepakchandu9@gmail.com.
+Thank you for choosing Fundoo_Notes! If you have any questions or need assistance, feel free to reach out to our support team at {settings.sender}.
 
 Best regards,
 Fundoo_Notes Team'''
