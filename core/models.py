@@ -13,6 +13,7 @@ class User(db.Model):
     password=db.Column(db.String(255),nullable=False)
     location=db.Column(db.String(250),nullable=False)
     is_verified = db.Column(db.Boolean, default=False)
+    note = db.relationship('Notes', back_populates='user')
 
     def __init__(self, username, email, password, location, **kwargs) -> None:
         self.username = username
@@ -30,9 +31,6 @@ class User(db.Model):
             payload.update({'aud': aud})
         return JWT.to_encode(payload)
             
-
-
-
     @property
     def json(self):
         return {
@@ -41,3 +39,20 @@ class User(db.Model):
             "email":self.email,
             "location": self.location
         }
+
+
+class Notes(db.Model):
+    __tablename__ = 'notes'
+    id=db.Column(db.Integer,primary_key=True,nullable=False, autoincrement=True)
+    title=db.Column(db.String(50),nullable=True)
+    description=db.Column(db.Text,nullable=False)
+    color = db.Column(db.String(20))
+    reminder = db.Column(db.DateTime, default=None, nullable=True)
+    user_id=db.Column(db.Integer,db.ForeignKey('users.id', ondelete="CASCADE"),nullable=False)
+    user=db.relationship('User',back_populates="note")
+
+    def __str__(self) -> str:
+        return f'{self.title}-{self.id}'
+    
+
+
