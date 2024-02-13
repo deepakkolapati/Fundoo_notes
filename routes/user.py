@@ -18,7 +18,6 @@ def index():
 @api.route('/user')
 class UserAPI(Resource):    
 
-    # @app.post("/register")
     def post(self):
         try:
             serializer = UserSchema(**request.json)
