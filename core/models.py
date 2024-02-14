@@ -54,5 +54,16 @@ class Notes(db.Model):
     def __str__(self) -> str:
         return f'{self.title}-{self.id}'
     
+    @property
+    def json(self):
+        return {
+            "id": self.id,
+            "title": self.title,
+            "description": self.description,
+            "color": self.color,
+            "reminder": self.reminder,
+            "user_id": self.user_id
+        }
+    
 
 
