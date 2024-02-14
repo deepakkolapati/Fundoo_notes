@@ -8,19 +8,19 @@ def authorize_user(function):
         try:
             token = request.headers.get('Authorization')
             if not token:
-                return {'msg': 'Token not found'}, 404
+                return {'message': 'Token not found','status': 404}, 404
             payload = JWT.to_decode(token, aud='login')
             user = User.query.get(payload.get('user_id'))
             if not user:
-                return {}
+                return {'message': 'User not found', 'status':404 },404 # change status code
             if request.method in ['POST', 'PUT']:
                 request.json.update(user_id=user.id)
             else:
                 kwargs.update(user_id=user.id)
         except PyJWTError:
-            return {'msg': 'Invalid Token'}, 401
+            return {'msg': 'Invalid Token','status': 401}, 401
         except Exception:
-            return {}
+            return {'msg' : 'Something went wrong', 'status' :500}
         return function(*args, **kwargs)
     wrapper.__name__ == function.__name__
     return wrapper

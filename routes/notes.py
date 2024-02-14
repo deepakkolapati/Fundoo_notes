@@ -26,39 +26,39 @@ class NotesApi(Resource):
             err = json.loads(e.json())
             return {'message': f'{err[0]["input"]}-{err[0]["msg"]}', "status": 400}, 400
         except Exception as e:
-            return {'message': 'Something went wrong'}, 500
+            return {'message': 'Something went wrong','status': 500}, 500
 
     def get(self, *args, **kwargs):
         try:
             print(kwargs)
             user_id = kwargs.get('user_id')
             if not user_id:
-                return {'message': 'User ID not provided'}, 400
+                return {'message': 'User ID not provided','status': 400}, 400
 
             notes = Notes.query.filter_by(user_id=user_id).all()
             if notes:
-                return {"data": [note.json for note in notes]}
-            return {"message": "Notes not found"}
+                return {"message": " Notes found","status":200,"data": [note.json for note in notes]},200 #change status code
+            return {"message": "Notes not found",'status': 404},404 # change status code
         except Exception as e:
-            return {'message': 'Something went wrong'}, 500
+            return {'message': 'Something went wrong','status':500}, 500
         
     def put(self, *args, **kwargs):
         try:
             data = request.json
             note = Notes.query.filter_by(id=data['id'], user_id=data['user_id']).first()
             if not note:
-                return {"message": "Note not found"}, 404
+                return {"message": "Note not found","status": 404}, 404
 
             serializer = NoteValidator(**request.get_json())
             updated_data = serializer.model_dump()
             [setattr(note, key, value) for key, value in updated_data.items()]
             db.session.commit()
-            return {"message": "Note updated successfully"}, 200
+            return {"message": "Note updated successfully","status":200,"data":note.json}, 200
         except ValidationError as e:
             err = json.loads(e.json())
             return {'message': f'{err[0]["input"]}-{err[0]["msg"]}', "status": 400}, 400
         except Exception as e:
-            return {'message': 'Something went wrong'}, 500
+            return {'message': 'Something went wrong',"status": 500}, 500
 
 
 @api.route("/notes/<int:id>")
@@ -71,19 +71,19 @@ class NoteApi(Resource):
             print(kwargs)
             note = Notes.query.filter_by(**kwargs).first()
             if note:
-                return note.json
-            return {"message": "Note not found"}, 404
+                return { "message": "Notes found","status":200,"data":note.json},200 #change status code
+            return {"message": "Note not found", "status" : 404 }, 404
         except Exception as e:
-            return {'message': 'Something went wrong'}, 500
+            return {'message': 'Something went wrong', "status": 500}, 500
 
     def delete(self, *args, **kwargs):
         try:
             note = Notes.query.filter_by(**kwargs).first()
             if not note:
-                return {"message": "Note not found"}, 404
+                return {"message": "Note not found", "status" :404}, 404
 
             db.session.delete(note)
             db.session.commit()
-            return {"message": "Note deleted successfully"}, 204
+            return {"message": "Note deleted successfully", "status" :204}, 204
         except Exception as e:
-            return {'message': 'Something went wrong'}, 500
+            return {'message': 'Something went wrong',"status": 500}, 500
