@@ -6,6 +6,6 @@ class NoteValidator(BaseModel):
     title: Optional[str]= None
     description : Optional[str]= None
     color :Optional[str]= None
-    reminder : Optional[str]= None
+    reminder : Optional[datetime]= None
     user_id : int
     
