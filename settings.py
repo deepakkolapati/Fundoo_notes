@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     database_uri: str   
     mail_port: int
     base_url: str
+    host:str
+    redis_port:int
+    redis_db: int
     
 
 
