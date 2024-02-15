@@ -14,6 +14,7 @@ class User(db.Model):
     location=db.Column(db.String(250),nullable=False)
     is_verified = db.Column(db.Boolean, default=False)
     note = db.relationship('Notes', back_populates='user')
+    label=db.relationship('Label', back_populates='user')
 
     def __init__(self, username, email, password, location, **kwargs) -> None:
         self.username = username
@@ -70,4 +71,16 @@ class Notes(db.Model):
         }
     
 
-
+class Label(db.Model):
+    __tablename__ = 'labels'
+    id=db.Column(db.Integer,primary_key=True,nullable=False, autoincrement=True)
+    name=db.Column(db.String(50),nullable=False)
+    user_id=db.Column(db.Integer,db.ForeignKey('users.id',ondelete='CASCADE'),nullable=False)
+    user=db.relationship('User',back_populates='label')
+    @property
+    def json(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "user_id": self.user_id
+        }
