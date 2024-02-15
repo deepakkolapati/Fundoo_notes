@@ -48,6 +48,8 @@ class Notes(db.Model):
     description=db.Column(db.Text,nullable=False)
     color = db.Column(db.String(20))
     reminder = db.Column(db.DateTime, default=None, nullable=True)
+    is_archive=db.Column(db.Boolean, default=False)
+    is_trash=db.Column(db.Boolean, default=False)
     user_id=db.Column(db.Integer,db.ForeignKey('users.id', ondelete="CASCADE"),nullable=False)
     user=db.relationship('User',back_populates="note")
 
@@ -62,6 +64,8 @@ class Notes(db.Model):
             "description": self.description,
             "color": self.color,
             "reminder": self.reminder,
+            "is_archive": self.is_archive,
+            "is_trash": self.is_trash,
             "user_id": self.user_id
         }
     
