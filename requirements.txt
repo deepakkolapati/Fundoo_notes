@@ -29,6 +29,7 @@ pydantic_core==2.16.2
 PyJWT==2.8.0
 python-dotenv==1.0.1
 pytz==2024.1
+redis==5.0.1
 referencing==0.33.0
 rpds-py==0.17.1
 SQLAlchemy==2.0.25
