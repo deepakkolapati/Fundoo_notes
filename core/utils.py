@@ -2,6 +2,7 @@ import jwt
 from flask_mail import Message
 from . import mail
 from settings import settings
+import redis
 
 class JWT:
 
@@ -29,3 +30,21 @@ def send_mail(user, email, token):
         msg.body= content
     mail.send(msg)
 
+class RedisManager:
+    redis_client= redis.StrictRedis(host=settings.host, port=settings.redis_port, db=settings.redis_db)
+
+    @classmethod
+    def save(cls,key,field,value):
+        cls.redis_client.hset(key,field,value)
+
+    @classmethod
+    def get(cls,key):
+        return cls.redis_client.hgetall(key)
+    
+    @classmethod
+    def get_one(cls,key,field):
+        return cls.redis_client.hget(key,field)
+    
+    @classmethod
+    def delete(cls,key,val):
+        cls.redis_client.hdel(key,val)
