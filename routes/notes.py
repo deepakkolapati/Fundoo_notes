@@ -99,3 +99,67 @@ class NoteApi(Resource):
             return {"message": "Note deleted successfully", "status" :204}, 204
         except Exception as e:
             return {'message': 'Something went wrong',"status": 500}, 500
+
+
+@api.route("/archive")
+class ArchiveApi(Resource):
+
+    method_decorators = (authorize_user,)
+
+    def put(self,*args, **kwargs):
+        try:
+            data = request.json
+            note=Notes.query.filter_by(id=data['id'],user_id=data['user_id']).first()
+            if not note:
+                return {"message":"Note not found","status": 404 },404
+            note.is_archive = True if not note.is_archive else False
+            db.session.commit()
+            if not note.is_archive:
+                return {"message":" Note is unarchived","status":200,"data" :note.json},200
+            return {"message" : "Note is archived","status": 200,"data" : note.json},200
+        except ValueError as e:
+            return {"message": str(e), "status" :500},500
+
+    def get(self,*args,**kwargs):
+        try:
+            user_id=kwargs["user_id"]
+            notes=Notes.query.filter_by(user_id=user_id,is_archive=True, is_trash=False).all()
+            if not notes:
+                return {"message":"Notes not found","status": 404 },404
+            return {"message":"Retrieved archive notes","status":200,
+                    "data":[note.json for note in notes]},200
+        except Exception as e:
+            return {"message": str(e), "status" :500},500
+
+@api.route("/delete")
+class TrashApi(Resource):
+   
+    method_decorators = (authorize_user,)
+    
+    def put(self,*args, **kwargs):
+        try:
+            data = request.json
+            note=Notes.query.filter_by(id=data['id'],user_id=data['user_id']).first()
+            if not note:
+                return {"message":"Note not found","status": 404 },404
+            note.is_trash = True if not note.is_trash else False
+            db.session.commit()
+            if not note.is_trash:
+                return {"message":" Note is restored  ","status":200},200
+            return {"message" : "Note moved to Trash","status": 200},200
+        except ValueError as e:
+            return {"message": str(e), "status" :500},500
+
+    def get(self,*args,**kwargs):
+        try:
+            user_id=kwargs["user_id"]
+            notes=Notes.query.filter_by(user_id=user_id,is_trash=True, is_archive=False).all()
+            if not notes:
+                return {"message":"Notes not found","status": 404 },404
+            return {"message":"Notes found","status":200,
+                    "data":[note.json for note in notes]},200
+        except Exception as e:
+            return {"message": str(e), "status" :500},500
+
+
+    
