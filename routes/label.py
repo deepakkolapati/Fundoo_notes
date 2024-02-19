@@ -23,7 +23,7 @@ class LabelApi(Resource):
             return {"message":"Labels found","status":200,
                     "data":[label.json for label in labels]},200
         except Exception as e :
-            return {"message": str(e), "status" :500},500
+            return {"message": str(e), "status": 500}, 500
 
     def post(self,*args, **kwargs):
         try:
@@ -31,7 +31,7 @@ class LabelApi(Resource):
             label=Label(**data)
             db.session.add(label)
             db.session.commit()
-            return {"message": "Label added successfully", "status" :201, "data" : label.json}, 201
+            return {"message": "Label added successfully", "status": 201, "data": label.json}, 201
         except Exception as e:
             return {'message': str(e), "status": 500}, 500
 
