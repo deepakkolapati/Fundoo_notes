@@ -6,6 +6,7 @@ from schemas.user_schemas import UserSchema, UsernameValidator
 from pydantic import ValidationError
 import json
 from flask_restx import Api, Resource
+from core.tasks import celery_send_mail
 
 app = init_app()
 api = Api(app=app, prefix='/api')
@@ -25,7 +26,7 @@ class UserAPI(Resource):
             db.session.add(user)
             db.session.commit()
             token=user.token('register',60)
-            send_mail(user.username, user.email, token)
+            celery_send_mail(user.username, user.email, token)
             return {"message": "user registered", "status" : 201, "data" : user.json}
         except ValidationError as e:
             err = json.loads(e.json())
