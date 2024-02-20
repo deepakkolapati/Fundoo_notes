@@ -5,7 +5,7 @@ from .utils import JWT
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Mapped
 from typing import List
-
+from sqlalchemy import UniqueConstraint
 
 collaborators = db.Table(
     "collaborators",
@@ -13,6 +13,7 @@ collaborators = db.Table(
     db.Column("user_id", db.ForeignKey("users.id")),
     db.Column("note_id", db.ForeignKey("notes.id")),
     db.Column("access_type", db.String(20), default='read-only'),
+    UniqueConstraint("user_id", "note_id", name="unique_user_note")
 )
 
 class User(db.Model):
