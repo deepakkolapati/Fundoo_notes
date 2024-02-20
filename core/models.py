@@ -3,7 +3,17 @@ from flask import jsonify
 from passlib.hash import pbkdf2_sha256
 from .utils import JWT
 from datetime import datetime, timedelta
+from sqlalchemy.orm import Mapped
+from typing import List
 
+
+collaborators = db.Table(
+    "collaborators",
+    db.metadata,
+    db.Column("user_id", db.ForeignKey("users.id")),
+    db.Column("note_id", db.ForeignKey("notes.id")),
+    db.Column("access_type", db.String(20), default='read-only'),
+)
 
 class User(db.Model):
     __tablename__="users"
@@ -15,6 +25,7 @@ class User(db.Model):
     is_verified = db.Column(db.Boolean, default=False)
     note = db.relationship('Notes', back_populates='user')
     label=db.relationship('Label', back_populates='user')
+    c_notes: Mapped[List['Notes']] = db.relationship(secondary=collaborators, back_populates='c_users')
 
     def __init__(self, username, email, password, location, **kwargs) -> None:
         self.username = username
@@ -53,6 +64,7 @@ class Notes(db.Model):
     is_trash=db.Column(db.Boolean, default=False)
     user_id=db.Column(db.Integer,db.ForeignKey('users.id', ondelete="CASCADE"),nullable=False)
     user=db.relationship('User',back_populates="note")
+    c_users: Mapped[List[User]] =db.relationship(secondary=collaborators,back_populates="c_notes")
 
     def __str__(self) -> str:
         return f'{self.title}-{self.id}'
