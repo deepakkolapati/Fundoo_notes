@@ -12,6 +12,14 @@ def init_app():
     app = Flask(__name__)
     app.config['SQLALCHEMY_DATABASE_URI'] = settings.database_uri
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
+    app.config.from_mapping(
+    CELERY=dict(
+        broker_url="redis://127.0.0.1:6379/0",
+        result_backend="redis://127.0.0.1:6379/0",
+        broker_connection_retry_on_startup=True,
+        # task_ignore_result=True,
+    ),
+)
     app.config['MAIL_SERVER'] = 'smtp.gmail.com'
     app.config['MAIL_PORT'] = settings.mail_port
     app.config['MAIL_USERNAME'] = settings.sender
