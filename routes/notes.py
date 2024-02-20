@@ -1,6 +1,8 @@
 from core import db, init_app
 from flask import request, jsonify
 from core.models import Notes
+from core.models import User
+from core.models import collaborators
 from pydantic import ValidationError
 from flask_restx import Api, Resource
 from schemas.note_schemas import NoteValidator
@@ -162,4 +164,38 @@ class TrashApi(Resource):
             return {"message": str(e), "status" :500},500
 
 
-    
+
+@api.route("/collaborate")
+class CollaborateApi(Resource):
+    method_decorators = (authorize_user,)
+    def post(*args, **kwargs):
+        try:
+            data=request.json
+            if data['user_id'] in data["user_ids"]:
+                return {"message":"Sharing not allowed on the same user","status":403},403
+            note=Notes.query.filter_by(id=data["id"],user_id=data["user_id"]).first()
+            if not note:
+                return {"message":"Note not found","status":404},404
+            note.c_users.extend([User.query.filter_by(id=id).first() for id in data["user_ids"]])
+            db.session.commit()
+            return {"message":f"Note_{note.id} shared with users {",".join(map(str,data["user_ids"]))}", "status": 201},201
+        except Exception as e:
+            return {"message":str(e),"status" :500},500
+            
+
+    def delete(self,*args,**kwargs):
+        try:
+            data=request.json
+            if kwargs['user_id'] in data["user_ids"]:
+                return {"message":"Collaboration not allowed on the same user","status":403},403
+            note=Notes.query.filter_by(id=data["id"],user_id=kwargs["user_id"]).first()
+            if not note:
+                return {"message":"Note not found","status":404},404
+            [note.c_users.remove(user) for user in [User.query.filter_by(id=id).first() for id in data["user_ids"]]]
+            db.session.commit()
+            return {"message":f"Note_{note.id} access removed from users {",".join(map(str,data["user_ids"]))}", "status": 201},201
+        except Exception as e:
+            return {"message":str(e),"status" :500},500
+
+        
+
