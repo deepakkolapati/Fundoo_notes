@@ -9,6 +9,7 @@ from schemas.note_schemas import NoteValidator
 import json
 from core.middleware import authorize_user
 from core.utils import RedisManager
+from sqlalchemy.exc import IntegrityError
 
 app = init_app()
 api = Api(app=app, prefix='/api')
@@ -176,9 +177,18 @@ class CollaborateApi(Resource):
             note=Notes.query.filter_by(id=data["id"],user_id=data["user_id"]).first()
             if not note:
                 return {"message":"Note not found","status":404},404
-            note.c_users.extend([User.query.filter_by(id=id).first() for id in data["user_ids"]])
-            db.session.commit()
-            return {"message":f"Note_{note.id} shared with users {",".join(map(str,data["user_ids"]))}", "status": 201},201
+            try:
+                users_to_add = [User.query.filter_by(id=id).first() for id in data["user_ids"]]
+                existing_collaborators=set(note.c_users)
+                users_to_add=[user for user in users_to_add if user not in existing_collaborators]
+                note.c_users.extend(users_to_add)
+                db.session.commit()
+                added_users=[user.id for user in users_to_add]
+                if added_users:
+                    return {"message":f"Note_{note.id} shared with users {",".join(map(str,added_users))}", "status": 201},201
+                return {"message" : "Note can't be shared with the users who already have access","status":403},403
+            except sqlalchemy.exc.IntegrityError as e:
+                    return {"message":str(e),"status":409},409
         except Exception as e:
             return {"message":str(e),"status" :500},500
             
@@ -189,11 +199,21 @@ class CollaborateApi(Resource):
             if kwargs['user_id'] in data["user_ids"]:
                 return {"message":"Collaboration not allowed on the same user","status":403},403
             note=Notes.query.filter_by(id=data["id"],user_id=kwargs["user_id"]).first()
+            
             if not note:
                 return {"message":"Note not found","status":404},404
-            [note.c_users.remove(user) for user in [User.query.filter_by(id=id).first() for id in data["user_ids"]]]
-            db.session.commit()
-            return {"message":f"Note_{note.id} access removed from users {",".join(map(str,data["user_ids"]))}", "status": 201},201
+            try:
+                users_to_delete=[User.query.filter_by(id=id).first() for id in data["user_ids"]]
+                existing_collaborators=set(note.c_users)
+                users_to_delete=[user for user in users_to_delete if user in existing_collaborators]
+                [note.c_users.remove(user) for user in users_to_delete]
+                db.session.commit()
+                deleted_users=[user.id for user in users_to_delete]
+                if deleted_users:
+                    return {"message":f"Note_{note.id} access removed from users {",".join(map(str,deleted_users))}", "status": 201},201
+                return {"message" : "Note can't be removed from the users who don't have access","status":403},403
+            except sqlalchemy.exc.IntegrityError as e:
+                    return {"message":str(e),"status":409},409
         except Exception as e:
             return {"message":str(e),"status" :500},500
 
