@@ -38,19 +38,27 @@ class NotesApi(Resource):
             user_id = kwargs.get('user_id')
             if not user_id:
                 return {'message': 'User ID not provided','status': 400}, 400
+            
+            user=User.query.filter_by(id=user_id).first()
+            if not user:
+                return {'message': 'User not found in database','status':   404}, 404
+            
+            shared_notes=[note.json for note in user.c_notes]
             redis_note=RedisManager.get(f'user_{user_id}')
             
             if redis_note:
+                shared_notes.extend([json.loads(value) for value in redis_note.values()])
                 return {"message": " Cache Notes Retrieved","status":200,
-                        "data": [json.loads(value) for value in redis_note.values()]},200
+                        "data": shared_notes},200
             notes = Notes.query.filter_by(user_id=user_id).all()
             if notes:
+                shared_notes.extend([note.json for note in notes])
                 return {"message": " Notes found","status":200,
-                        "data": [note.json for note in notes]},200 
+                        "data": shared_notes},200 
         
             return {"message": "Notes not found",'status': 404},404
         except Exception as e:
-            return {'message': 'Something went wrong','status':500}, 500
+            return {'message': str(e),'status':500}, 500
         
     def put(self, *args, **kwargs):
         try:
@@ -85,10 +93,15 @@ class NoteApi(Resource):
                 return { "message": " Cache Notes retrieved","status":200,"data":json.loads(redis_note)},200
             note = Notes.query.filter_by(**kwargs).first()
             if note:
-                return { "message": "Notes found","status":200,"data":note.json},200 
+                return { "message": "Notes found","status":200,"data":note.json},200
+            user=User.query.filter_by(id=kwargs['user_id']).first() 
+            if user:
+                for note in user.c_notes:
+                    if note.id==kwargs['id']:
+                        return { "message": "Notes found","status":200,"data":note.json},200
             return {"message": "Note not found", "status" : 404 }, 404
         except Exception as e:
-            return {'message': 'Something went wrong', "status": 500}, 500
+            return {'message': str(e), "status": 500}, 500
 
     def delete(self, *args, **kwargs):
         try:
