@@ -18,6 +18,11 @@ def init_app():
         result_backend="redis://127.0.0.1:6379/0",
         broker_connection_retry_on_startup=True,
         # task_ignore_result=True,
+        redbeat_redis_url = "redis://localhost:6379/0",
+        redbeat_lock_key = None,
+        enable_utc=True,
+        beat_max_loop_interval=5,
+        beat_scheduler='redbeat.schedulers.RedBeatScheduler'
     ),
 )
     app.config['MAIL_SERVER'] = 'smtp.gmail.com'

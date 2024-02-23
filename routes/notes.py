@@ -10,6 +10,10 @@ import json
 from core.middleware import authorize_user
 from core.utils import RedisManager
 from sqlalchemy.exc import IntegrityError
+from redbeat import RedBeatSchedulerEntry as Task
+from celery.schedules import crontab
+from core.tasks import celery as c_app
+import celery
 
 app = init_app()
 api = Api(app=app, prefix='/api')
@@ -25,13 +29,24 @@ class NotesApi(Resource):
             note = Notes(**serializer.model_dump())
             db.session.add(note)
             db.session.commit()
+            reminder = note.reminder
+            if reminder:
+                reminder_task = Task(name=f'user_{note.user_id}-note_{note.id}',
+                task='core.tasks.celery_send_mail',
+                schedule=crontab(minute=reminder.minute,
+                hour=reminder.hour,
+                day_of_month=reminder.day,
+                month_of_year=reminder.month),
+                app = c_app,
+                args= [note.user.username, note.user.email, "Hello world"])
+                reminder_task.save()
             RedisManager.save(f'user_{note.user_id}',f'note_{note.id}', json.dumps(note.json))
             return {"message": "Note added successfully", 'status': 201, 'data': note.json}, 201
         except ValidationError as e:
             err = json.loads(e.json())
             return {'message': f'{err[0]["input"]}-{err[0]["msg"]}', "status": 400}, 400
         except Exception as e:
-            return {'message': 'Something went wrong','status': 500}, 500
+            return {'message': str(e),'status': 500}, 500
 
     def get(self, *args, **kwargs):
         try:
