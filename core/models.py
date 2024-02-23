@@ -2,7 +2,7 @@ from core import db
 from flask import jsonify
 from passlib.hash import pbkdf2_sha256
 from .utils import JWT
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta,timezone
 from sqlalchemy.orm import Mapped
 from typing import List
 from sqlalchemy import UniqueConstraint
@@ -67,6 +67,26 @@ class Notes(db.Model):
     user=db.relationship('User',back_populates="note")
     c_users: Mapped[List[User]] =db.relationship(secondary=collaborators,back_populates="c_notes")
 
+    def __init__(self, title, description, color, user_id, reminder=None, **kwargs):
+  
+        self.title = title
+        self.description = description
+        self.color = color
+        self.user_id = user_id
+        self.is_archive = False
+        self.is_trash = False
+
+        if reminder:
+            self.set_reminder(reminder)
+
+    def set_reminder(self, reminder_time):
+        # Set the time zone to 'Asia/Kolkata'
+        asia_kolkata_timezone = timezone(timedelta(hours=5, minutes=30))
+        reminder_time = reminder_time.replace(tzinfo=asia_kolkata_timezone)
+
+        # Assign the reminder time to the Notes object
+        self.reminder = reminder_time
+
     def __str__(self) -> str:
         return f'{self.title}-{self.id}'
     
@@ -77,7 +97,7 @@ class Notes(db.Model):
             "title": self.title,
             "description": self.description,
             "color": self.color,
-            "reminder": self.reminder,
+            "reminder": str(self.reminder),
             "is_archive": self.is_archive,
             "is_trash": self.is_trash,
             "user_id": self.user_id
