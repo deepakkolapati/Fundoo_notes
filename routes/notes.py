@@ -4,7 +4,7 @@ from core.models import Notes
 from core.models import User
 from core.models import collaborators
 from pydantic import ValidationError
-from flask_restx import Api, Resource
+from flask_restx import Api, Resource,fields
 from schemas.note_schemas import NoteValidator
 import json
 from core.middleware import authorize_user
@@ -32,7 +32,10 @@ api = Api(app=app, prefix='/api',
 class NotesApi(Resource):
 
     method_decorators =(authorize_user,)
-
+    @api.expect(api.model('AddNotes', {"title": fields.String(),
+    "description": fields.String() ,
+    "color": fields.String(),
+    "reminder": fields.String()}))
     def post(self, *args, **kwargs):
         try:
             serializer = NoteValidator(**request.get_json())
@@ -57,7 +60,7 @@ class NotesApi(Resource):
             return {'message': f'{err[0]["input"]}-{err[0]["msg"]}', "status": 400}, 400
         except Exception as e:
             return {'message': str(e),'status': 500}, 500
-
+    
     def get(self, *args, **kwargs):
         try:
             user_id = kwargs.get('user_id')
@@ -72,19 +75,23 @@ class NotesApi(Resource):
             redis_note=RedisManager.get(f'user_{user_id}')
             
             if redis_note:
-                shared_notes.extend([json.loads(value) for value in redis_note.values()])
-                return {"message": " Cache Notes Retrieved","status":200,
-                        "data": shared_notes},200
+                reddis_notes=[json.loads(value) for value in redis_note.values()]
+                return {"message":"Notes Found","status":200,
+                        "data": reddis_notes,"shared data":shared_notes},200
             notes = Notes.query.filter_by(user_id=user_id).all()
             if notes:
-                shared_notes.extend([note.json for note in notes])
-                return {"message": " Notes found","status":200,
-                        "data": shared_notes},200 
+                db_notes=[json.loads(value) for value in notes.values()]
+                return {"message": " Notes Found","status":200,
+                        "data": db_notes,"message":"Shared Notes","shared data":shared_notes},200
         
             return {"message": "Notes not found",'status': 404},404
         except Exception as e:
             return {'message': str(e),'status':500}, 500
-        
+    
+    @api.expect(api.model('UpdateNotes', {"id":fields.String(),"title": fields.String(),
+    "description": fields.String() ,
+    "color": fields.String(),
+    "reminder": fields.String()}))
     def put(self, *args, **kwargs):
         try:
             data = request.json
@@ -123,7 +130,7 @@ class NoteApi(Resource):
             if user:
                 for note in user.c_notes:
                     if note.id==kwargs['id']:
-                        return { "message": "Notes found","status":200,"data":note.json},200
+                        return { "message": "Shared Notes found","status":200,"data":note.json},200
             return {"message": "Note not found", "status" : 404 }, 404
         except Exception as e:
             return {'message': str(e), "status": 500}, 500
@@ -146,7 +153,7 @@ class NoteApi(Resource):
 class ArchiveApi(Resource):
 
     method_decorators = (authorize_user,)
-
+    @api.expect(api.model('PutArchive', {"id":fields.Integer()}))
     def put(self,*args, **kwargs):
         try:
             data = request.json
@@ -172,11 +179,11 @@ class ArchiveApi(Resource):
         except Exception as e:
             return {"message": str(e), "status" :500},500
 
-@api.route("/delete")
+@api.route("/trash")
 class TrashApi(Resource):
    
     method_decorators = (authorize_user,)
-    
+    @api.expect(api.model('PutTrash', {"id":fields.Integer()}))
     def put(self,*args, **kwargs):
         try:
             data = request.json
@@ -207,6 +214,7 @@ class TrashApi(Resource):
 @api.route("/collaborate")
 class CollaborateApi(Resource):
     method_decorators = (authorize_user,)
+    @api.expect(api.model('AddColaborators', {"id":fields.Integer(),"user_ids":fields.List(fields.Integer)}))
     def post(*args, **kwargs):
         try:
             data=request.json
@@ -230,7 +238,7 @@ class CollaborateApi(Resource):
         except Exception as e:
             return {"message":str(e),"status" :500},500
             
-
+    @api.expect(api.model('RemoveColaborators', {"id":fields.Integer(),"user_ids":fields.List(fields.Integer)}))
     def delete(self,*args,**kwargs):
         try:
             data=request.json

@@ -9,7 +9,7 @@ from flask_restx import Api, Resource, fields
 from core.tasks import celery_send_mail
 
 app = init_app()
-api = Api(app=app, prefix='/api')
+api = Api(app=app, prefix='/api',doc="/docs")
 
 @app.route('/')
 def index():
@@ -18,7 +18,7 @@ def index():
 
 @api.route('/user')
 class UserAPI(Resource):    
-
+    @api.expect(api.model('register', {'username': fields.String(),'email' : fields.String(), 'password': fields.String(),'location' : fields.String()}))
     def post(self):
         try:
             serializer = UserSchema(**request.json)
@@ -48,7 +48,7 @@ class UserAPI(Resource):
             return {"message": "User verified successfully"},200
         except Exception as e:
             return {"message": "Something went wrong"},400
-
+    @api.expect(api.model('delete', {'username': fields.String(), 'password': fields.String()}))
     def delete(self):
         data = request.get_json()
         try:
