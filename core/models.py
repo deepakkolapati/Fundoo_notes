@@ -10,8 +10,8 @@ from sqlalchemy import UniqueConstraint
 collaborators = db.Table(
     "collaborators",
     db.metadata,
-    db.Column("user_id", db.ForeignKey("users.id")),
-    db.Column("note_id", db.ForeignKey("notes.id")),
+    db.Column("user_id", db.ForeignKey("users.id",ondelete="CASCADE")),
+    db.Column("note_id", db.ForeignKey("notes.id",ondelete="CASCADE")),
     db.Column("access_type", db.String(20), default='read-only'),
     UniqueConstraint("user_id", "note_id", name="unique_user_note")
 )
