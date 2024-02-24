@@ -5,7 +5,7 @@ from core.utils import JWT, send_mail
 from schemas.user_schemas import UserSchema, UsernameValidator
 from pydantic import ValidationError
 import json
-from flask_restx import Api, Resource
+from flask_restx import Api, Resource, fields
 from core.tasks import celery_send_mail
 
 app = init_app()
@@ -31,7 +31,8 @@ class UserAPI(Resource):
         except ValidationError as e:
             err = json.loads(e.json())
             return {'message': f'{err[0]['input']}-{err[0]['msg']}', "status": 400}, 400
-        
+
+    @api.doc(params={"token": "Jwt token to verify user"})
     def get(self):
         try:
             token=request.args.get('token')
@@ -65,6 +66,7 @@ class UserAPI(Resource):
 @api.route('/login')
 class LoginAPI(Resource):
 
+    @api.expect(api.model('login', {'username': fields.String(), 'password': fields.String()}))
     def post(self):
         data = request.get_json()
         try:

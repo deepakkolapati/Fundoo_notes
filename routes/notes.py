@@ -16,7 +16,17 @@ from core.tasks import celery as c_app
 import celery
 
 app = init_app()
-api = Api(app=app, prefix='/api')
+api = Api(app=app, prefix='/api',
+        security='apiKey',
+        authorizations={
+            'apiKey': {
+                'type': 'apiKey',
+                'in': 'header',
+                'required': True,
+                'name': 'Authorization'
+            }
+        },
+        doc="/docs")
 
 @api.route("/notes")
 class NotesApi(Resource):
