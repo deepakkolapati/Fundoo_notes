@@ -7,6 +7,7 @@ from schemas.note_schemas import NoteValidator
 import json
 from core.middleware import authorize_user
 from core.utils import RedisManager
+from sqlalchemy import text
 
 app = init_app()
 api = Api(app=app, prefix='/api',
@@ -26,18 +27,17 @@ class LabelApi(Resource):
     method_decorators = (authorize_user,)
     def delete(self,*args, **kwargs):
         try:
-            label=Label.query.filter_by(id=kwargs["id"], user_id=kwargs["user_id"]).first()
+            statement=text(f'''SELECT * FROM labels WHERE id={kwargs["id"]} AND user_id={kwargs["user_id"]}''')
+            label=db.session.execute(statement).fetchone()
             if not label:
                 return {"message": "Label not found","status": 404 },404
-            db.session.delete(label)
+            statement=text(f'''DELETE FROM labels WHERE id={kwargs["id"]} AND user_id={kwargs["user_id"]} ''')
+            db.session.execute(statement)
             db.session.commit()
             return {"message": "Label deleted successfully", "status" :204}, 204
         except Exception as e:
             app.logger.exception(e,exc_info=False)
             return {"message": str(e), "status":500},500
-
-
-
 
 @api.route("/labels")
 class LabelPostApi(Resource):
@@ -46,10 +46,10 @@ class LabelPostApi(Resource):
     def post(self,*args, **kwargs):
         try:
             data = request.json
-            label=Label(**data)
-            db.session.add(label)
+            statement=text(f'''INSERT INTO labels(name,user_id) VALUES('{data["name"]}',{data["user_id"]})''')
+            db.session.execute(statement)
             db.session.commit()
-            return {"message": "Label added successfully", "status": 201, "data": label.json}, 201
+            return {"message": "Label added successfully", "status": 201, "data": data}, 201
         except Exception as e:
             app.logger.exception(e,exc_info=False)
             return {'message': str(e), "status": 500}, 500
@@ -58,12 +58,14 @@ class LabelPostApi(Resource):
     def put(self,*args, **kwargs):
         try:
             data=request.json
-            label=Label.query.filter_by(id=data["id"], user_id=data["user_id"]).first()
+            statement=text(f'''SELECT * FROM labels WHERE id={data["id"]} AND user_id={data["user_id"]}''')
+            label=db.session.execute(statement).fetchone()
             if not label:
                 return {"message": "Label not found","status": 404 },404
-            label.name=data["name"]
+            statement=text(f'''UPDATE labels SET name='{data["name"]}' WHERE id={data["id"]} AND user_id={data["user_id"]}''')
+            db.session.execute(statement)
             db.session.commit()
-            return {"message": "Label updated successfully", "status" :200,"data": label.json}, 200
+            return {"message": "Label updated successfully", "status" :200,"data": data}, 200
         except Exception as e:
             app.logger.exception(e,exc_info=False)
             return {"message": str(e), "status":500},500
@@ -71,11 +73,13 @@ class LabelPostApi(Resource):
     def get(self,*args, **kwargs):
         try:
             user_id= kwargs["user_id"]
-            labels=Label.query.filter_by(user_id=user_id).all()
+            statement = text(f"SELECT * FROM labels WHERE user_id = {user_id}")
+            result = db.session.execute(statement).fetchall()
+            labels=[{'id':row[0],'name':row[1],'user_id':row[2]} for row in result]
             if not labels:
                 return {"message":"Labels not found","status": 404 },404
             return {"message":"Labels found","status":200,
-                    "data":[label.json for label in labels]},200
+                    "data":labels},200
         except Exception as e :
             app.logger.exception(e,exc_info=False)
             return {"message": str(e), "status": 500}, 500
