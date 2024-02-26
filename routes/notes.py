@@ -35,7 +35,7 @@ class NotesApi(Resource):
     @api.expect(api.model('AddNotes', {"title": fields.String(),
     "description": fields.String() ,
     "color": fields.String(),
-    "reminder": fields.String()}))
+     "reminder": fields.DateTime(attribute=lambda x: None if x == 'None' else datetime.strptime(x, '%Y-%m-%dT%H:%M:%S.%fZ'))}))
     def post(self, *args, **kwargs):
         try:
             serializer = NoteValidator(**request.get_json())
@@ -56,9 +56,11 @@ class NotesApi(Resource):
             RedisManager.save(f'user_{note.user_id}',f'note_{note.id}', json.dumps(note.json))
             return {"message": "Note added successfully", 'status': 201, 'data': note.json}, 201
         except ValidationError as e:
+            app.logger.exception(e,exc_info=False)
             err = json.loads(e.json())
             return {'message': f'{err[0]["input"]}-{err[0]["msg"]}', "status": 400}, 400
         except Exception as e:
+            app.logger.exception(e,exc_info=False)
             return {'message': str(e),'status': 500}, 500
     
     def get(self, *args, **kwargs):
@@ -86,12 +88,13 @@ class NotesApi(Resource):
         
             return {"message": "Notes not found",'status': 404},404
         except Exception as e:
+            app.logger.exception(e,exc_info=False)
             return {'message': str(e),'status':500}, 500
     
-    @api.expect(api.model('UpdateNotes', {"id":fields.String(),"title": fields.String(),
+    @api.expect(api.model('UpdateNotes', {"id":fields.Integer(),"title": fields.String(),
     "description": fields.String() ,
     "color": fields.String(),
-    "reminder": fields.String()}))
+     "reminder": fields.DateTime(attribute=lambda x: None if x == 'None' else datetime.strptime(x, '%Y-%m-%dT%H:%M:%S.%fZ'))}))
     def put(self, *args, **kwargs):
         try:
             data = request.json
@@ -106,11 +109,12 @@ class NotesApi(Resource):
             RedisManager.save(f'user_{note.user_id}',f'note_{note.id}', json.dumps(note.json))
             return {"message": "Note updated successfully","status":200,"data":note.json}, 200
         except ValidationError as e:
+            app.logger.exception(e,exc_info=False)
             err = json.loads(e.json())
             return {'message': f'{err[0]["input"]}-{err[0]["msg"]}', "status": 400}, 400
         except Exception as e:
-            print(e)
-            return {'message': 'Something went wrong',"status": 500}, 500
+            app.logger.exception(e,exc_info=False)
+            return {'message': str(e),"status": 500}, 500
 
 
 @api.route("/notes/<int:id>")
@@ -133,6 +137,7 @@ class NoteApi(Resource):
                         return { "message": "Shared Notes found","status":200,"data":note.json},200
             return {"message": "Note not found", "status" : 404 }, 404
         except Exception as e:
+            app.logger.exception(e,exc_info=False)
             return {'message': str(e), "status": 500}, 500
 
     def delete(self, *args, **kwargs):
@@ -146,6 +151,7 @@ class NoteApi(Resource):
             RedisManager.delete(f'user_{kwargs['user_id']}',f'note_{kwargs['id']}')
             return {"message": "Note deleted successfully", "status" :204}, 204
         except Exception as e:
+            app.logger.exception(e,exc_info=False)
             return {'message': 'Something went wrong',"status": 500}, 500
 
 
@@ -166,6 +172,7 @@ class ArchiveApi(Resource):
                 return {"message":" Note is unarchived","status":200,"data" :note.json},200
             return {"message" : "Note is archived","status": 200,"data" : note.json},200
         except ValueError as e:
+            app.logger.exception(e,exc_info=False)
             return {"message": str(e), "status" :500},500
 
     def get(self,*args,**kwargs):
@@ -177,6 +184,7 @@ class ArchiveApi(Resource):
             return {"message":"Retrieved archive notes","status":200,
                     "data":[note.json for note in notes]},200
         except Exception as e:
+            app.logger.exception(e,exc_info=False)
             return {"message": str(e), "status" :500},500
 
 @api.route("/trash")
@@ -196,6 +204,7 @@ class TrashApi(Resource):
                 return {"message":" Note is restored  ","status":200},200
             return {"message" : "Note moved to Trash","status": 200},200
         except ValueError as e:
+            app.logger.exception(e,exc_info=False)
             return {"message": str(e), "status" :500},500
 
     def get(self,*args,**kwargs):
@@ -207,6 +216,7 @@ class TrashApi(Resource):
             return {"message":"Notes found","status":200,
                     "data":[note.json for note in notes]},200
         except Exception as e:
+            app.logger.exception(e,exc_info=False)
             return {"message": str(e), "status" :500},500
 
 
@@ -234,8 +244,10 @@ class CollaborateApi(Resource):
                     return {"message":f"Note_{note.id} shared with users {",".join(map(str,added_users))}", "status": 201},201
                 return {"message" : "Note can't be shared with the users who already have access","status":403},403
             except sqlalchemy.exc.IntegrityError as e:
-                    return {"message":str(e),"status":409},409
+                app.logger.exception(e,exc_info=False)
+                return {"message":str(e),"status":409},409
         except Exception as e:
+            app.logger.exception(e,exc_info=False)
             return {"message":str(e),"status" :500},500
             
     @api.expect(api.model('RemoveColaborators', {"id":fields.Integer(),"user_ids":fields.List(fields.Integer)}))
@@ -259,8 +271,10 @@ class CollaborateApi(Resource):
                     return {"message":f"Note_{note.id} access removed from users {",".join(map(str,deleted_users))}", "status": 201},201
                 return {"message" : "Note can't be removed from the users who don't have access","status":403},403
             except sqlalchemy.exc.IntegrityError as e:
-                    return {"message":str(e),"status":409},409
+                app.logger.exception(e,exc_info=False)
+                return {"message":str(e),"status":409},409
         except Exception as e:
+            app.logger.exception(e,exc_info=False)
             return {"message":str(e),"status" :500},500
 
         

@@ -29,6 +29,7 @@ class UserAPI(Resource):
             celery_send_mail(user.username, user.email, token)
             return {"message": "user registered", "status" : 201, "data" : user.json}
         except ValidationError as e:
+            app.logger.exception(e,exc_info=False)
             err = json.loads(e.json())
             return {'message': f'{err[0]['input']}-{err[0]['msg']}', "status": 400}, 400
 
@@ -47,6 +48,7 @@ class UserAPI(Resource):
             db.session.commit()
             return {"message": "User verified successfully"},200
         except Exception as e:
+            app.logger.exception(e,exc_info=False)
             return {"message": "Something went wrong"},400
     @api.expect(api.model('delete', {'username': fields.String(), 'password': fields.String()}))
     def delete(self):
@@ -60,6 +62,7 @@ class UserAPI(Resource):
                 return {"message":" User successfully deleted"}, 204
             return {"message" : "Username or Password is incorrect"}, 401
         except ValidationError as e:
+            app.logger.exception(e,exc_info=False)
             return {'message': 'Invalid username'}, 400
 
 
@@ -76,6 +79,7 @@ class LoginAPI(Resource):
                 return {"message":" User logged in successfully", 'token': user.token('login', 60)}, 200
             return {"message" : "Username or Password is incorrect"}, 401
         except ValidationError as e:
+            app.logger.exception(e,exc_info=False)
             return {'message': 'Invalid username'}, 400
 
 
