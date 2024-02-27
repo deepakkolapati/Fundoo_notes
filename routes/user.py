@@ -7,6 +7,7 @@ from pydantic import ValidationError
 import json
 from flask_restx import Api, Resource, fields
 from core.tasks import celery_send_mail
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 app = init_app()
 api = Api(app=app, prefix='/api',doc="/docs")
@@ -27,29 +28,35 @@ class UserAPI(Resource):
             db.session.commit()
             token=user.token('register',60)
             # celery_send_mail(user.username, user.email, token)
-            return {"message": "user registered", "status" : 201, "data" : user.json}, 201
+            return {"message": "user registered", "status" : 201, "data" : user.json,"token":token}, 201
         except ValidationError as e:
             app.logger.exception(e,exc_info=False)
             err = json.loads(e.json())
             return {'message': f'{err[0]['input']}-{err[0]['msg']}', "status": 400}, 400
+        except IntegrityError as e:
+            app.logger.exception(e,exc_info=False)
+            return {'message': 'Username or email already exists', 'status': 409}, 409
+        except Exception as e:
+            app.logger.exception(e,exc_info=False)
+            return {'message':str(e),'status':500},500
 
     @api.doc(params={"token": "Jwt token to verify user"})
     def get(self):
         try:
             token=request.args.get('token')
             if not token:
-                return {'message': 'Token not found'}, 400
+                return {'message': 'Token not found'}, 404
             decoded=JWT.to_decode(token,"register")
             user_id=decoded["user_id"]
             user=User.query.filter_by(id=user_id).first()
             if not user:
-                return {'message': 'User not found'}, 400
+                return {'message': 'User not found'}, 404
             user.is_verified=True
             db.session.commit()
             return {"message": "User verified successfully"},200
         except Exception as e:
             app.logger.exception(e,exc_info=False)
-            return {"message": "Something went wrong"},400
+            return {"message": str(e)},500
     @api.expect(api.model('delete', {'username': fields.String(), 'password': fields.String()}))
     def delete(self):
         data = request.get_json()
