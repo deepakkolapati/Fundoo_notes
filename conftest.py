@@ -9,8 +9,10 @@ import os
 @pytest.fixture
 def user_app():
     path = Path(__file__).resolve().parent
+    print(path)
     app = init_app()
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(path, 'test.sqlite3')
+    db_path=os.path.join(path, 'test.sqlite3')
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + db_path
     app.config['TESTING'] = True
     with app.app_context():
         db.create_all()
