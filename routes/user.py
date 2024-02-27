@@ -26,8 +26,8 @@ class UserAPI(Resource):
             db.session.add(user)
             db.session.commit()
             token=user.token('register',60)
-            celery_send_mail(user.username, user.email, token)
-            return {"message": "user registered", "status" : 201, "data" : user.json}
+            # celery_send_mail(user.username, user.email, token)
+            return {"message": "user registered", "status" : 201, "data" : user.json}, 201
         except ValidationError as e:
             app.logger.exception(e,exc_info=False)
             err = json.loads(e.json())
