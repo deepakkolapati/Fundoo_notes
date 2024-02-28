@@ -8,10 +8,30 @@ db = SQLAlchemy()
 migarte = Migrate()
 mail = Mail()
 
-def init_app():
+class Development:
+    SQLALCHEMY_DATABASE_URI = settings.database_uri
+    SQLALCHEMY_TRACK_MODIFICATIONS = True
+    DEBUG = True
+
+class Testing:
+    SQLALCHEMY_DATABASE_URI = "sqlite:///test.sqlite3"
+    SQLALCHEMY_TRACK_MODIFICATIONS = True
+    TESTING= True
+
+class Production:
+    SQLALCHEMY_DATABASE_URI = settings.database_uri
+    SQLALCHEMY_TRACK_MODIFICATIONS = True
+    DEBUG = False
+
+config_mode={
+    "debug": Development,
+    "testing": Testing,
+    "production": Production
+}
+
+def init_app(mode="debug"):
     app = Flask(__name__)
-    app.config['SQLALCHEMY_DATABASE_URI'] = settings.database_uri
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
+    app.config.from_object(config_mode[mode])
     app.config.from_mapping(
     CELERY=dict(
         broker_url="redis://127.0.0.1:6379/0",
