@@ -37,6 +37,19 @@ class NotesApi(Resource):
     "color": fields.String(),
      "reminder": fields.DateTime(attribute=lambda x: None if x == 'None' else datetime.strptime(x, '%Y-%m-%dT%H:%M:%S.%fZ'))}))
     def post(self, *args, **kwargs):
+        """
+        Adds a new note to the database.
+
+        Args:
+            request (Request): The request containing the note data.
+
+        Returns:
+            Response: The response containing the status code and message.
+
+        Raises:
+            ValidationError: If the request data is not valid.
+            Exception: If an unexpected error occurs.
+        """
         try:
             serializer = NoteValidator(**request.get_json())
             note = Notes(**serializer.model_dump())
@@ -64,6 +77,18 @@ class NotesApi(Resource):
             return {'message': str(e),'status': 500}, 500
     
     def get(self, *args, **kwargs):
+        """
+        Retrieve a list of notes for the current user.
+
+        Parameters:
+            user_id (int): The ID of the user.
+
+        Returns:
+            dict: A JSON object containing a message and status code.
+
+        Raises:
+            Exception: If an unexpected error occurs.
+        """
         try:
             user_id = kwargs.get('user_id')
             if not user_id:
@@ -100,6 +125,21 @@ class NotesApi(Resource):
     "color": fields.String(),
      "reminder": fields.DateTime(attribute=lambda x: None if x == 'None' else datetime.strptime(x, '%Y-%m-%dT%H:%M:%S.%fZ'))}))
     def put(self, *args, **kwargs):
+        """
+        Update an existing note.
+
+        Args:
+            id (int): The ID of the note.
+            user_id (int): The ID of the user.
+            request (Request): The request containing the updated note data.
+
+        Returns:
+            Response: The response containing the status code and message.
+
+        Raises:
+            ValidationError: If the request data is not valid.
+            Exception: If an unexpected error occurs.
+        """
         try:
             data = request.json
             note = Notes.query.filter_by(id=data['id'], user_id=data['user_id']).first()
@@ -127,6 +167,19 @@ class NoteApi(Resource):
     method_decorators = (authorize_user,)
 
     def get(self, *args, **kwargs):
+        """
+        Retrieve a note for the current user.
+
+        Parameters:
+            user_id (int): The ID of the user.
+            note_id (str): The ID of the note
+
+        Returns:
+            dict: A JSON object containing a message and status code.
+
+        Raises:
+            Exception: If an unexpected error occurs.
+        """
         try:
             # redis_note=RedisManager.get_one(f'user_{kwargs['user_id']}',f'note_{kwargs['id']}')
             # if redis_note:
@@ -145,6 +198,17 @@ class NoteApi(Resource):
             return {'message': str(e), "status": 500}, 500
 
     def delete(self, *args, **kwargs):
+        """Deletes a note from the database.
+
+        Args:
+            kwargs (dict): The keyword arguments containing the note ID and user ID.
+
+        Returns:
+            Response: The response containing the status code and message.
+
+        Raises:
+            Exception: If an unexpected error occurs.
+        """
         try:
             note = Notes.query.filter_by(**kwargs).first()
             if not note:
@@ -165,6 +229,19 @@ class ArchiveApi(Resource):
     method_decorators = (authorize_user,)
     @api.expect(api.model('PutArchive', {"id":fields.Integer()}))
     def patch(self,*args, **kwargs):
+        """
+        Unarchives or archives a note.
+
+        Parameters:
+            user_id (int): The ID of the user.
+            note_id (str): The ID of the note
+
+        Returns:
+            Response: A response containing the status code and message.
+
+        Raises:
+            ValueError: If the note is not found.
+        """
         try:
             data = request.json
             note=Notes.query.filter_by(id=data['id'],user_id=data['user_id']).first()
@@ -177,9 +254,24 @@ class ArchiveApi(Resource):
             return {"message" : "Note is archived","status": 200,"data" : note.json},200
         except ValueError as e:
             app.logger.exception(e,exc_info=False)
+            return {"message": str(e), "status" :400},400
+        except Exception as e:
+            app.logger.exception(e,exc_info=False)
             return {"message": str(e), "status" :500},500
 
     def get(self,*args,**kwargs):
+        """
+        Retrieve a list of archived notes for the current user.
+
+        Parameters:
+            user_id (int): The ID of the user.
+
+        Returns:
+            dict: A JSON object containing a message and status code.
+
+        Raises:
+            Exception: If an unexpected error occurs.
+        """
         try:
             user_id=kwargs["user_id"]
             notes=Notes.query.filter_by(user_id=user_id,is_archive=True, is_trash=False).all()
@@ -197,6 +289,19 @@ class TrashApi(Resource):
     method_decorators = (authorize_user,)
     @api.expect(api.model('PutTrash', {"id":fields.Integer()}))
     def patch(self,*args, **kwargs):
+        """
+        Adds notes to trash or restore the note from trash
+
+        Parameters:
+            user_id (int): The ID of the user.
+            note_id (str): The ID of the note
+
+        Returns:
+            Response: A response containing the note belongs to trash or not and status code.
+
+        Raises:
+            ValueError: If the note is not found.
+        """
         try:
             data = request.json
             note=Notes.query.filter_by(id=data['id'],user_id=data['user_id']).first()
@@ -209,9 +314,24 @@ class TrashApi(Resource):
             return {"message" : "Note moved to Trash","status": 200},200
         except ValueError as e:
             app.logger.exception(e,exc_info=False)
+            return {"message": str(e), "status" :400},400
+        except Exception as e:
+            app.logger.exception(e,exc_info=False)
             return {"message": str(e), "status" :500},500
 
     def get(self,*args,**kwargs):
+        """
+        Retrieve a list of Trash notes for the current user.
+
+        Parameters:
+            user_id (int): The ID of the user.
+
+        Returns:
+            dict: A JSON object containing a message and status code.
+
+        Raises:
+            Exception: If an unexpected error occurs.
+        """
         try:
             user_id=kwargs["user_id"]
             notes=Notes.query.filter_by(user_id=user_id,is_trash=True, is_archive=False).all()
@@ -230,6 +350,20 @@ class CollaborateApi(Resource):
     method_decorators = (authorize_user,)
     @api.expect(api.model('AddColaborators', {"id":fields.Integer(),"user_ids":fields.List(fields.Integer)}))
     def post(*args, **kwargs):
+        """
+        Adds collaborators to a note.
+
+        Parameters:
+            data (dict): The request data containing the note ID, user ID, and list of user IDs.
+
+        Returns:
+            dict: The response containing the status code and message.
+
+        Raises:
+            
+            sqlalchemy.exc.IntegrityError: If the note cannot be shared with the specified users.
+            Any other errors
+        """
         try:
             data=request.json
             if data['user_id'] in data["user_ids"]:
@@ -256,6 +390,20 @@ class CollaborateApi(Resource):
             
     @api.expect(api.model('RemoveColaborators', {"id":fields.Integer(),"user_ids":fields.List(fields.Integer)}))
     def delete(self,*args,**kwargs):
+        """
+            Removes collaborators to a note.
+
+            Parameters:
+                data (dict): The request data containing the note ID, user ID, and list of user IDs.
+
+            Returns:
+                dict: The response containing the status code and message.
+
+            Raises:
+                
+                sqlalchemy.exc.IntegrityError: If the note cannot be shared with the specified users.
+                Any other errors
+        """
         try:
             data=request.json
             if kwargs['user_id'] in data["user_ids"]:
