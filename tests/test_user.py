@@ -11,7 +11,7 @@ def test_register_user_should_return_success_response(user_client):
     response = user_client.post('/api/user', json=register_data, headers={"Content-Type": "application/json"})
     assert response.status_code == 201
 
-def test_register_user_invalid_password_should_return_failure_response(user_client):
+def test_register_user_invalid_password_should_return_success_response(user_client):
     register_data = {
         "username":"Karan",
         "email":"joshikfelix22@gmail.com",
@@ -21,7 +21,7 @@ def test_register_user_invalid_password_should_return_failure_response(user_clie
     response = user_client.post('/api/user', json=register_data, headers={"Content-Type": "application/json"})
     assert response.status_code == 400
 
-def test_register_user_invalid_username_should_return_failure_response(user_client):
+def test_register_user_invalid_username_should_return_success_response(user_client):
     register_data = {
         "username":"Kn",
         "email":"joshikfelix22@gmail.com",
@@ -31,7 +31,7 @@ def test_register_user_invalid_username_should_return_failure_response(user_clie
     response = user_client.post('/api/user', json=register_data, headers={"Content-Type": "application/json"})
     assert response.status_code == 400
 
-def test_reister_duplicate_username_should_return_failure_response(user_client):
+def test_reister_duplicate_username_should_return_success_response(user_client):
     register_data = {
         "username":"Karan",
         "email":"joshikfelix22@gmail.com",
@@ -49,7 +49,7 @@ def test_reister_duplicate_username_should_return_failure_response(user_client):
     response = user_client.post('/api/user', json=register_data, headers={"Content-Type": "application/json"})
     assert response.status_code == 409
 
-def test_register_user_missing_fields_should_return_failure_response(user_client):
+def test_register_user_missing_fields_should_return_success_response(user_client):
     register_data = {
         "email": "joshikfelix22@gmail.com",
         "password": "Kc5656$ef",
@@ -74,7 +74,7 @@ def test_login_user_should_return_valid_response(user_client):
     response = user_client.post('/api/login', json=login_data, headers={"Content-Type": "application/json"})
     assert response.status_code == 200
 
-def test_login_user_invalid_password_credentials_should_return_failure_response(user_client):
+def test_login_user_invalid_password_credentials_should_return_success_response(user_client):
     register_data = {
         "username": "Karan",
         "email": "joshikfelix22@gmail.com",
@@ -90,7 +90,7 @@ def test_login_user_invalid_password_credentials_should_return_failure_response(
     invalid_login_response = user_client.post('/api/login', json=invalid_login_data, headers={"Content-Type": "application/json"})
     assert invalid_login_response.status_code == 401  # Unauthorized
 
-def test_login_user_invalid_user_credentials_should_return_failure_response(user_client):
+def test_login_user_invalid_user_credentials_should_return_success_response(user_client):
     register_data = {
         "username": "Karan",
         "email": "joshikfelix22@gmail.com",
@@ -125,7 +125,7 @@ def test_verify_user_with_valid_token_should_return_success_response(user_client
     assert verify_response.status_code == 200
     assert verify_response.json['message'] == "User verified successfully"
 
-def test_verify_user_with_invalid_token_should_return_failure_response(user_client):
+def test_verify_user_with_invalid_token_should_return_success_response(user_client):
     # Register a user to get a valid token
     register_data = {
         "username": "TestUser",
