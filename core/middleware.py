@@ -13,14 +13,14 @@ def authorize_user(function):
             user = User.query.get(payload.get('user_id'))
             if not user:
                 return {'message': 'User not found', 'status':404 },404 # change status code
-            if request.method in ['POST', 'PUT']:
+            if request.method in ['POST', 'PUT','PATCH']:
                 request.json.update(user_id=user.id)
             else:
                 kwargs.update(user_id=user.id)
         except PyJWTError:
             return {'msg': 'Invalid Token','status': 401}, 401
         except Exception:
-            return {'msg' : 'Something went wrong', 'status' :500}
+            return {'msg' : str(e), 'status' :500}
         return function(*args, **kwargs)
     wrapper.__name__ == function.__name__
     return wrapper
