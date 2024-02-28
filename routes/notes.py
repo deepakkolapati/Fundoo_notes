@@ -53,7 +53,7 @@ class NotesApi(Resource):
                 app = c_app,
                 args= [note.user.username, note.user.email, "Hello world"])
                 reminder_task.save()
-            RedisManager.save(f'user_{note.user_id}',f'note_{note.id}', json.dumps(note.json))
+            # RedisManager.save(f'user_{note.user_id}',f'note_{note.id}', json.dumps(note.json))
             return {"message": "Note added successfully", 'status': 201, 'data': note.json}, 201
         except ValidationError as e:
             app.logger.exception(e,exc_info=False)
@@ -74,12 +74,12 @@ class NotesApi(Resource):
                 return {'message': 'User not found in database','status':   404}, 404
             
             shared_notes=[note.json for note in user.c_notes]
-            redis_note=RedisManager.get(f'user_{user_id}')
+            # redis_note=RedisManager.get(f'user_{user_id}')
             
-            if redis_note:
-                reddis_notes=[json.loads(value) for value in redis_note.values()]
-                return {"message":"Notes Found","status":200,
-                        "data": reddis_notes,"shared data":shared_notes},200
+            # if redis_note:
+            #     reddis_notes=[json.loads(value) for value in redis_note.values()]
+            #     return {"message":"Notes Found","status":200,
+            #             "data": reddis_notes,"shared data":shared_notes},200
             notes = Notes.query.filter_by(user_id=user_id).all()
             if notes:
                 db_notes=[json.loads(value) for value in notes.values()]
@@ -106,7 +106,7 @@ class NotesApi(Resource):
             updated_data = serializer.model_dump()
             [setattr(note, key, value) for key, value in updated_data.items()]
             db.session.commit()
-            RedisManager.save(f'user_{note.user_id}',f'note_{note.id}', json.dumps(note.json))
+            # RedisManager.save(f'user_{note.user_id}',f'note_{note.id}', json.dumps(note.json))
             return {"message": "Note updated successfully","status":200,"data":note.json}, 200
         except ValidationError as e:
             app.logger.exception(e,exc_info=False)
@@ -124,9 +124,9 @@ class NoteApi(Resource):
 
     def get(self, *args, **kwargs):
         try:
-            redis_note=RedisManager.get_one(f'user_{kwargs['user_id']}',f'note_{kwargs['id']}')
-            if redis_note:
-                return { "message": "Notes found","status":200,"data":json.loads(redis_note)},200
+            # redis_note=RedisManager.get_one(f'user_{kwargs['user_id']}',f'note_{kwargs['id']}')
+            # if redis_note:
+            #     return { "message": "Notes found","status":200,"data":json.loads(redis_note)},200
             note = Notes.query.filter_by(**kwargs).first()
             if note:
                 return { "message": "Notes found","status":200,"data":note.json},200
@@ -148,7 +148,7 @@ class NoteApi(Resource):
 
             db.session.delete(note)
             db.session.commit()
-            RedisManager.delete(f'user_{kwargs['user_id']}',f'note_{kwargs['id']}')
+            # RedisManager.delete(f'user_{kwargs['user_id']}',f'note_{kwargs['id']}')
             return {"message": "Note deleted successfully", "status" :204}, 204
         except Exception as e:
             app.logger.exception(e,exc_info=False)
