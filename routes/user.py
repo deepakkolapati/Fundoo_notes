@@ -22,6 +22,19 @@ def index():
 class UserAPI(Resource):    
     @api.expect(api.model('register', {'username': fields.String(),'email' : fields.String(), 'password': fields.String(),'location' : fields.String()}))
     def post(self):
+        """
+        Register a new user.
+
+        Returns:
+            JSON: User data and authentication token if user is registered successfully,
+            error message otherwise.
+
+        Raises:
+            ValidationError: If the request body is not a valid JSON or does not
+            match the UserSchema.
+            IntegrityError: If the username or email already exists in the database.
+            Exception: If any other error occurs.
+        """
         try:
             serializer = UserSchema(**request.json)
             user=User(**serializer.model_dump())
@@ -43,6 +56,16 @@ class UserAPI(Resource):
 
     @api.doc(params={"token": "Jwt token to verify user"})
     def get(self):
+        """
+        Verify user data based on the JWT token in the request.
+
+        Returns:
+            JSON: Verified successfully message if token is valid else error message
+
+        Raises:
+            PyJWTError: If the token is invalid.
+            Exception: If any other error occurs.
+        """
         try:
             token=request.args.get('token')
             if not token:
@@ -62,6 +85,20 @@ class UserAPI(Resource):
             return {"message": str(e)},500
     @api.expect(api.model('delete', {'username': fields.String(), 'password': fields.String()}))
     def delete(self):
+        """Deletes a user based on their username and password
+
+        Args:
+            username (str): The username of the user to be deleted
+            password (str): The password of the user to be deleted
+
+        Returns:
+            HTTP status code: 204 if the user was successfully deleted, 401 if the
+                username or password is incorrect, or 400 if the username is invalid
+
+        Raises:
+            ValidationError: If the username is not a valid string
+            Exception: For any other unexpected errors
+        """
         data = request.get_json()
         try:
             serializer = UsernameValidator(username=data['username'])
@@ -84,6 +121,23 @@ class LoginAPI(Resource):
 
     @api.expect(api.model('login', {'username': fields.String(), 'password': fields.String()}))
     def post(self):
+        """
+        Logs in a user based on their username and password.
+
+        Args:
+            username (str): The username of the user to log in
+            password (str): The password of the user to log in
+
+        Returns:
+            JSON: A JSON object containing a message indicating whether the login was
+            successful, and a JWT token if the login was successful. The HTTP status code
+            will be 200 if the login was successful, or 401 if the username or password is
+            incorrect.
+
+        Raises:
+            ValidationError: If the username is not a valid string
+            Exception: For any other unexpected errors
+        """
         data = request.get_json()
         try:
             serializer = UsernameValidator(username=data['username'])
