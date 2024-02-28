@@ -23,6 +23,18 @@ celery=celery_init_app(app)
 
 @shared_task
 def celery_send_mail(user, email, token):
+    """
+    This function is used to send an email to the user with a verification link.
+
+    Args:
+        user (str): The username of the user.
+        email (str): The email address of the user.
+        token (str): The verification token.
+
+    Returns:
+        None
+
+    """
     msg=Message("Welcome to Fundoo_Notes! Verify Your Email to Get Started",
                 sender=f"{settings.sender}",recipients=[email])
     
