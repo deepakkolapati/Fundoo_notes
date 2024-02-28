@@ -4,7 +4,14 @@ from jwt import PyJWTError
 from .models import User
 
 def authorize_user(function):
+    """
+    This function is a decorator that is used to authorize the user before they 
+    access any of the resources in the system.
+    """
     def wrapper(*args, **kwargs):
+        """
+        This function is a wrapper that is used to wrap the original function and add authorization functionality.
+        """
         try:
             token = request.headers.get('Authorization')
             if not token:
