@@ -71,6 +71,9 @@ class UserAPI(Resource):
         except ValidationError as e:
             app.logger.exception(e,exc_info=False)
             return {'message': 'Invalid username'}, 400
+        except Exception as e:
+            app.logger.exception(e,exc_info=False)
+            return {"message":str(e),"status" :500},500
 
 
 @api.route('/login')
@@ -88,6 +91,9 @@ class LoginAPI(Resource):
         except ValidationError as e:
             app.logger.exception(e,exc_info=False)
             return {'message': 'Invalid username'}, 400
+        except Exception as e:
+            app.logger.exception(e,exc_info=False)
+            return {"message":str(e),"status" :500},500
 
 
 
