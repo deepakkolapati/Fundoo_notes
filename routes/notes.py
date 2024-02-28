@@ -126,7 +126,7 @@ class NoteApi(Resource):
         try:
             redis_note=RedisManager.get_one(f'user_{kwargs['user_id']}',f'note_{kwargs['id']}')
             if redis_note:
-                return { "message": " Cache Notes retrieved","status":200,"data":json.loads(redis_note)},200
+                return { "message": "Notes found","status":200,"data":json.loads(redis_note)},200
             note = Notes.query.filter_by(**kwargs).first()
             if note:
                 return { "message": "Notes found","status":200,"data":note.json},200
