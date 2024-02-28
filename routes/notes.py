@@ -152,7 +152,7 @@ class NoteApi(Resource):
             return {"message": "Note deleted successfully", "status" :204}, 204
         except Exception as e:
             app.logger.exception(e,exc_info=False)
-            return {'message': 'Something went wrong',"status": 500}, 500
+            return {'message': str(e),"status": 500}, 500
 
 
 @api.route("/archive")
