@@ -130,15 +130,17 @@ def test_verify_user_with_invalid_token_should_return_failure_response(user_clie
     register_data = {
         "username": "TestUser",
         "email": "testuser@example.com",
-        "password": "SecurePass123!",
+        "password": "Secure@Pass123!",
         "location": "TestCity"
     }
     register_response = user_client.post('/api/user', json=register_data, headers={"Content-Type": "application/json"})
     assert register_response.status_code == 201
 
     token = register_response.json['token'] +'fsdg' # Extract the token from the registration response
-
+    
     # Use the token to verify the user
     verify_response = user_client.get(f'/api/user?token={token}')
-    assert verify_response.status_code == 400
+    assert verify_response.status_code == 401
+
+
   
