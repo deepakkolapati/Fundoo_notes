@@ -81,15 +81,18 @@ class NotesApi(Resource):
             #     return {"message":"Notes Found","status":200,
             #             "data": reddis_notes,"shared data":shared_notes},200
             notes = Notes.query.filter_by(user_id=user_id).all()
-            if notes:
-                db_notes=[note.json for note in notes]
+            if notes and shared_notes :
                 return {"message": "Notes Found","status":200,
-                        "data": db_notes,"shared data":shared_notes},200
-        
+                        "data": [note.json for note in notes],"shared data":shared_notes},200
+            elif notes is not None:
+                return {"message": "Notes Found","status":200,
+                        "data": [note.json for note in notes]},200
+            elif shared_notes is not None:
+                return {"message": "Shared Notes Found","status":200,
+                        "shared data":shared_notes},200
             return {"message": "Notes not found",'status': 404},404
         except Exception as e:
             app.logger.exception(e,exc_info=False)
-            print(e)
             return {'message': str(e),'status':500}, 500
     
     @api.expect(api.model('UpdateNotes', {"id":fields.Integer(),"title": fields.String(),
@@ -244,7 +247,7 @@ class CollaborateApi(Resource):
                 if added_users:
                     return {"message":f"Note_{note.id} shared with users {",".join(map(str,added_users))}", "status": 201},201
                 return {"message" : "Note can't be shared with the users who already have access","status":403},403
-            except sqlalchemy.exc.IntegrityError as e:
+            except IntegrityError as e:
                 app.logger.exception(e,exc_info=False)
                 return {"message":str(e),"status":409},409
         except Exception as e:
