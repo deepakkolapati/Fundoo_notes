@@ -82,13 +82,14 @@ class NotesApi(Resource):
             #             "data": reddis_notes,"shared data":shared_notes},200
             notes = Notes.query.filter_by(user_id=user_id).all()
             if notes:
-                db_notes=[json.loads(value) for value in notes.values()]
-                return {"message": " Notes Found","status":200,
-                        "data": db_notes,"message":"Shared Notes","shared data":shared_notes},200
+                db_notes=[note.json for note in notes]
+                return {"message": "Notes Found","status":200,
+                        "data": db_notes,"shared data":shared_notes},200
         
             return {"message": "Notes not found",'status': 404},404
         except Exception as e:
             app.logger.exception(e,exc_info=False)
+            print(e)
             return {'message': str(e),'status':500}, 500
     
     @api.expect(api.model('UpdateNotes', {"id":fields.Integer(),"title": fields.String(),
