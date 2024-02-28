@@ -160,7 +160,7 @@ class ArchiveApi(Resource):
 
     method_decorators = (authorize_user,)
     @api.expect(api.model('PutArchive', {"id":fields.Integer()}))
-    def put(self,*args, **kwargs):
+    def patch(self,*args, **kwargs):
         try:
             data = request.json
             note=Notes.query.filter_by(id=data['id'],user_id=data['user_id']).first()
@@ -192,7 +192,7 @@ class TrashApi(Resource):
    
     method_decorators = (authorize_user,)
     @api.expect(api.model('PutTrash', {"id":fields.Integer()}))
-    def put(self,*args, **kwargs):
+    def patch(self,*args, **kwargs):
         try:
             data = request.json
             note=Notes.query.filter_by(id=data['id'],user_id=data['user_id']).first()
