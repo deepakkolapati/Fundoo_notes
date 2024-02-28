@@ -27,6 +27,16 @@ api = Api(app=app, prefix='/api',
 class LabelApi(Resource):
     method_decorators = (authorize_user,)
     def delete(self,*args, **kwargs):
+        """Deletes a label with the given id and user_id.
+
+        Args:
+            id (int): The id of the label to be deleted.
+            user_id (int): The id of the user who owns the label.
+
+        Returns:
+            Response: A response with a status code of 204 if the label was
+                deleted successfully, or a status code of 500 if an error occurred.
+        """
         try:
             statement=text(f'''DELETE FROM labels WHERE id={kwargs["id"]} AND user_id={kwargs["user_id"]} ''')
             db.session.execute(statement)
@@ -41,6 +51,17 @@ class LabelPostApi(Resource):
     method_decorators = (authorize_user,)
     @api.expect(api.model('AddLabel', {"name": fields.String()}))
     def post(self,*args, **kwargs):
+        """
+        Adds a new label to the database.
+
+        Args:
+            request (Request): The request containing the label data.
+
+        Returns:
+            Response: A response containing the label data and a status code of 201
+                if the label was added successfully, or a status code of 500 if an
+                error occurred.
+        """
         try:
             data = request.json
             statement=text(f'''INSERT INTO labels(name,user_id) VALUES('{data["name"]}',{data["user_id"]})''')
@@ -57,6 +78,18 @@ class LabelPostApi(Resource):
     
     @api.expect(api.model('UpdateLabel', {"id":fields.Integer(),"name": fields.String()}))
     def put(self,*args, **kwargs):
+        """
+        Update a label with the given id and user_id.
+
+        Args:
+            id (int): The id of the label to be updated.
+            user_id (int): The id of the user who owns the label.
+            name (str): The new name of the label.
+
+        Returns:
+            Response: A response with a status code of 200 if the label was updated
+                successfully, or a status code of 500 if an error occurred.
+        """
         try:
             data=request.json
             statement=text(f'''UPDATE labels SET name='{data["name"]}' WHERE id={data["id"]} AND user_id={data["user_id"]}''')
@@ -72,6 +105,20 @@ class LabelPostApi(Resource):
             return {"message": str(e), "status":500},500
     
     def get(self,*args, **kwargs):
+        """
+        Retrieve all labels for a given user.
+
+        Parameters:
+            user_id (int): The user ID associated with the labels.
+
+        Returns:
+            list[dict]: A list of label dictionaries, each containing the label
+                properties.
+
+        Raises:
+            Exception: An exception is raised if an error occurs.
+        """
+
         try:
             user_id= kwargs["user_id"]
             query= db.session.execute(text(f"SELECT * FROM labels WHERE user_id = {user_id}"))
