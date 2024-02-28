@@ -169,7 +169,7 @@ class ArchiveApi(Resource):
             note.is_archive = True if not note.is_archive else False
             db.session.commit()
             if not note.is_archive:
-                return {"message":" Note is unarchived","status":200,"data" :note.json},200
+                return {"message":"Note is unarchived","status":200,"data" :note.json},200
             return {"message" : "Note is archived","status": 200,"data" : note.json},200
         except ValueError as e:
             app.logger.exception(e,exc_info=False)
@@ -201,7 +201,7 @@ class TrashApi(Resource):
             note.is_trash = True if not note.is_trash else False
             db.session.commit()
             if not note.is_trash:
-                return {"message":" Note is restored  ","status":200},200
+                return {"message":"Note is restored","status":200},200
             return {"message" : "Note moved to Trash","status": 200},200
         except ValueError as e:
             app.logger.exception(e,exc_info=False)
@@ -213,7 +213,7 @@ class TrashApi(Resource):
             notes=Notes.query.filter_by(user_id=user_id,is_trash=True, is_archive=False).all()
             if not notes:
                 return {"message":"Notes not found","status": 404 },404
-            return {"message":"Notes found","status":200,
+            return {"message":"Retrieved trash notes","status":200,
                     "data":[note.json for note in notes]},200
         except Exception as e:
             app.logger.exception(e,exc_info=False)
