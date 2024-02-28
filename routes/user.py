@@ -1,6 +1,7 @@
 from core import db, init_app
 from flask import request,jsonify
 from core.models import User
+from jwt import PyJWTError
 from core.utils import JWT, send_mail
 from schemas.user_schemas import UserSchema, UsernameValidator
 from pydantic import ValidationError
@@ -54,6 +55,8 @@ class UserAPI(Resource):
             user.is_verified=True
             db.session.commit()
             return {"message": "User verified successfully"},200
+        except PyJWTError:
+            return {'msg': 'Invalid Token','status': 401}, 401
         except Exception as e:
             app.logger.exception(e,exc_info=False)
             return {"message": str(e)},500
