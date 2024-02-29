@@ -26,7 +26,7 @@ api = Api(app=app, prefix='/api',
                 'name': 'Authorization'
             }
         },
-        doc="/docs")
+        doc="/docs",default_label="Notes", title="Fundoo Notes", default="Fundoo")
 
 @api.route("/notes")
 class NotesApi(Resource):

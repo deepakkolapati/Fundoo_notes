@@ -11,7 +11,7 @@ from core.tasks import celery_send_mail
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 app = init_app()
-api = Api(app=app, prefix='/api',doc="/docs")
+api = Api(app=app, prefix='/api',doc="/docs", default_label="User", title="Fundoo User", default="Fundoo")
 
 @app.route('/')
 def index():

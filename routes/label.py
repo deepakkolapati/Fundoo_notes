@@ -21,7 +21,7 @@ api = Api(app=app, prefix='/api',
                 'name': 'Authorization'
             }
         },
-        doc="/docs")
+        doc="/docs",default_label="Label", title="Fundoo Label", default="Fundoo")
 
 @api.route("/labels/<int:id>")
 class LabelDeleteApi(Resource):
