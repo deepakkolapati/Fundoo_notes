@@ -106,16 +106,13 @@ class NotesApi(Resource):
             #     return {"message":"Notes Found","status":200,
             #             "data": reddis_notes,"shared data":shared_notes},200
             notes = Notes.query.filter_by(user_id=user_id).all()
-            if notes and shared_notes :
+            if notes:
                 return {"message": "Notes Found","status":200,
                         "data": [note.json for note in notes],"shared data":shared_notes},200
-            elif notes is not None:
-                return {"message": "Notes Found","status":200,
-                        "data": [note.json for note in notes]},200
-            elif shared_notes is not None:
+            if len(shared_notes) >0:
                 return {"message": "Shared Notes Found","status":200,
                         "shared data":shared_notes},200
-            return {"message": "Notes not found",'status': 404},404
+            return {"message": "Notes not found",'status': 404}, 404
         except Exception as e:
             app.logger.exception(e,exc_info=False)
             return {'message': str(e),'status':500}, 500
