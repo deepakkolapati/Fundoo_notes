@@ -54,5 +54,6 @@ def init_app(mode="debug"):
     mail.init_app(app)
     db.init_app(app)
     migarte.init_app(app, db)
-
+    with app.app_context():
+        db.create_all()
     return app
