@@ -24,7 +24,7 @@ api = Api(app=app, prefix='/api',
         doc="/docs")
 
 @api.route("/labels/<int:id>")
-class LabelApi(Resource):
+class LabelDeleteApi(Resource):
     method_decorators = (authorize_user,)
     def delete(self,*args, **kwargs):
         """Deletes a label with the given id and user_id.
@@ -47,7 +47,7 @@ class LabelApi(Resource):
             return {"message": str(e), "status":500},500
 
 @api.route("/labels")
-class LabelPostApi(Resource):
+class LabelApi(Resource):
     method_decorators = (authorize_user,)
     @api.expect(api.model('AddLabel', {"name": fields.String()}))
     def post(self,*args, **kwargs):
@@ -123,8 +123,10 @@ class LabelPostApi(Resource):
             user_id= kwargs["user_id"]
             query= db.session.execute(text(f"SELECT * FROM labels WHERE user_id = {user_id}"))
             labels=list(map(dict, query.mappings().all()))
-            return {"message":"Labels found","status":200,
+            if labels:
+                return {"message":"Labels found","status":200,
                     "data": labels},200
+            return {"message":"Labels not found","status":404},404
         except Exception as e :
             app.logger.exception(e,exc_info=False)
             return {"message": str(e), "status": 500}, 500
