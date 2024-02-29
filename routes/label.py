@@ -9,6 +9,8 @@ from core.middleware import authorize_user
 from core.utils import RedisManager
 from sqlalchemy import text
 import psycopg2
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 app = init_app()
 api = Api(app=app, prefix='/api',
@@ -22,10 +24,12 @@ api = Api(app=app, prefix='/api',
             }
         },
         doc="/docs",default_label="Label", title="Fundoo Label", default="Fundoo")
+limiter = Limiter(app=app,key_func=get_remote_address, storage_uri="redis://localhost:6379/1")
 
 @api.route("/labels/<int:id>")
 class LabelDeleteApi(Resource):
     method_decorators = (authorize_user,)
+    @limiter.limit('20 per second')
     def delete(self,*args, **kwargs):
         """Deletes a label with the given id and user_id.
 
@@ -50,6 +54,7 @@ class LabelDeleteApi(Resource):
 class LabelApi(Resource):
     method_decorators = (authorize_user,)
     @api.expect(api.model('AddLabel', {"name": fields.String()}))
+    @limiter.limit('20 per second')
     def post(self,*args, **kwargs):
         """
         Adds a new label to the database.
@@ -77,6 +82,7 @@ class LabelApi(Resource):
             return {'message': str(e), "status": 500}, 500
     
     @api.expect(api.model('UpdateLabel', {"id":fields.Integer(),"name": fields.String()}))
+    @limiter.limit('20 per second')
     def put(self,*args, **kwargs):
         """
         Update a label with the given id and user_id.
@@ -103,7 +109,8 @@ class LabelApi(Resource):
         except Exception as e:
             app.logger.exception(e,exc_info=False)
             return {"message": str(e), "status":500},500
-    
+            
+    @limiter.limit('20 per second')
     def get(self,*args, **kwargs):
         """
         Retrieve all labels for a given user.

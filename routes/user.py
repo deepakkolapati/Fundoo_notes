@@ -9,9 +9,14 @@ import json
 from flask_restx import Api, Resource, fields
 from core.tasks import celery_send_mail
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+
 
 app = init_app()
 api = Api(app=app, prefix='/api',doc="/docs", default_label="User", title="Fundoo User", default="Fundoo")
+limiter = Limiter(app=app,key_func=get_remote_address, storage_uri="redis://localhost:6379/1")
+
 
 @app.route('/')
 def index():
@@ -20,7 +25,9 @@ def index():
 
 @api.route('/user')
 class UserAPI(Resource):    
-    @api.expect(api.model('register', {'username': fields.String(),'email' : fields.String(), 'password': fields.String(),'location' : fields.String()}))
+    @api.expect(api.model('register', {'username': fields.String(),'email' : fields.String(), 
+    'password': fields.String(),'location' : fields.String()}))
+    @limiter.limit('20 per second')
     def post(self):
         """
         Register a new user.
@@ -55,6 +62,7 @@ class UserAPI(Resource):
             return {'message':str(e),'status':500},500
 
     @api.doc(params={"token": "Jwt token to verify user"})
+    @limiter.limit('20 per second')
     def get(self):
         """
         Verify user data based on the JWT token in the request.
@@ -84,6 +92,7 @@ class UserAPI(Resource):
             app.logger.exception(e,exc_info=False)
             return {"message": str(e)},500
     @api.expect(api.model('delete', {'username': fields.String(), 'password': fields.String()}))
+    @limiter.limit('20 per second')
     def delete(self):
         """Deletes a user based on their username and password
 
@@ -120,6 +129,7 @@ class UserAPI(Resource):
 class LoginAPI(Resource):
 
     @api.expect(api.model('login', {'username': fields.String(), 'password': fields.String()}))
+    @limiter.limit('20 per second')
     def post(self):
         """
         Logs in a user based on their username and password.

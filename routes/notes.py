@@ -14,6 +14,8 @@ from redbeat import RedBeatSchedulerEntry as Task
 from celery.schedules import crontab
 from core.tasks import celery as c_app
 import celery
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 app = init_app()
 api = Api(app=app, prefix='/api',
@@ -27,6 +29,7 @@ api = Api(app=app, prefix='/api',
             }
         },
         doc="/docs",default_label="Notes", title="Fundoo Notes", default="Fundoo")
+limiter = Limiter(app=app,key_func=get_remote_address, storage_uri="redis://localhost:6379/1")
 
 @api.route("/notes")
 class NotesApi(Resource):
@@ -36,6 +39,7 @@ class NotesApi(Resource):
     "description": fields.String() ,
     "color": fields.String(),
      "reminder": fields.DateTime(attribute=lambda x: None if x == 'None' else datetime.strptime(x, '%Y-%m-%dT%H:%M:%S.%fZ'))}))
+    @limiter.limit('20 per second')
     def post(self, *args, **kwargs):
         """
         Adds a new note to the database.
@@ -75,7 +79,8 @@ class NotesApi(Resource):
         except Exception as e:
             app.logger.exception(e,exc_info=False)
             return {'message': str(e),'status': 500}, 500
-    
+
+    @limiter.limit('20 per second')
     def get(self, *args, **kwargs):
         """
         Retrieve a list of notes for the current user.
@@ -121,6 +126,8 @@ class NotesApi(Resource):
     "description": fields.String() ,
     "color": fields.String(),
      "reminder": fields.DateTime(attribute=lambda x: None if x == 'None' else datetime.strptime(x, '%Y-%m-%dT%H:%M:%S.%fZ'))}))
+    
+    @limiter.limit('20 per second')
     def put(self, *args, **kwargs):
         """
         Update an existing note.
@@ -163,6 +170,7 @@ class NoteApi(Resource):
 
     method_decorators = (authorize_user,)
 
+    @limiter.limit('20 per second')
     def get(self, *args, **kwargs):
         """
         Retrieve a note for the current user.
@@ -194,6 +202,7 @@ class NoteApi(Resource):
             app.logger.exception(e,exc_info=False)
             return {'message': str(e), "status": 500}, 500
 
+    @limiter.limit('20 per second')
     def delete(self, *args, **kwargs):
         """Deletes a note from the database.
 
@@ -225,6 +234,7 @@ class ArchiveApi(Resource):
 
     method_decorators = (authorize_user,)
     @api.expect(api.model('PutArchive', {"id":fields.Integer()}))
+    @limiter.limit('20 per second')
     def patch(self,*args, **kwargs):
         """
         Unarchives or archives a note.
@@ -256,6 +266,7 @@ class ArchiveApi(Resource):
             app.logger.exception(e,exc_info=False)
             return {"message": str(e), "status" :500},500
 
+    @limiter.limit('20 per second')
     def get(self,*args,**kwargs):
         """
         Retrieve a list of archived notes for the current user.
@@ -285,6 +296,7 @@ class TrashApi(Resource):
    
     method_decorators = (authorize_user,)
     @api.expect(api.model('PutTrash', {"id":fields.Integer()}))
+    @limiter.limit('20 per second')
     def patch(self,*args, **kwargs):
         """
         Adds notes to trash or restore the note from trash
@@ -316,6 +328,7 @@ class TrashApi(Resource):
             app.logger.exception(e,exc_info=False)
             return {"message": str(e), "status" :500},500
 
+    @limiter.limit('20 per second')
     def get(self,*args,**kwargs):
         """
         Retrieve a list of Trash notes for the current user.
@@ -346,6 +359,7 @@ class TrashApi(Resource):
 class CollaborateApi(Resource):
     method_decorators = (authorize_user,)
     @api.expect(api.model('AddColaborators', {"id":fields.Integer(),"user_ids":fields.List(fields.Integer)}))
+    @limiter.limit('20 per second')
     def post(*args, **kwargs):
         """
         Adds collaborators to a note.
@@ -384,7 +398,8 @@ class CollaborateApi(Resource):
         except Exception as e:
             app.logger.exception(e,exc_info=False)
             return {"message":str(e),"status" :500},500
-            
+    
+    @limiter.limit('20 per second')
     @api.expect(api.model('RemoveColaborators', {"id":fields.Integer(),"user_ids":fields.List(fields.Integer)}))
     def delete(self,*args,**kwargs):
         """
