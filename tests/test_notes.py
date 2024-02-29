@@ -1,20 +1,6 @@
 import pytest
 
-def test_add_note_should_return_success(user_client):
-    register_data = {
-        "username": "Karan",
-        "email": "joshikfelix22@gmail.com",
-        "password": "Kc5656$ef",
-        "location": "srm"
-    }
-    user_client.post('/api/user', json=register_data, headers={"Content-Type": "application/json"})
-    login_data = {
-        "username": "Karan",
-        "password": "Kc5656$ef"
-    }
-    login_response = user_client.post('/api/login', json=login_data, headers={"Content-Type": "application/json"})
-    token=login_response.json['token']
-    assert login_response.status_code == 200  
+def test_add_note_should_return_success(user_client,token):
     note_data={
         "title": "top movies",
         "description": "inception",
@@ -24,21 +10,7 @@ def test_add_note_should_return_success(user_client):
     "Authorization": token})
     assert note_response.status_code == 201 
 
-def test_get_notes_should_return_success(user_client):
-    register_data = {
-        "username": "Karan",
-        "email": "joshikfelix22@gmail.com",
-        "password": "Kc5656$ef",
-        "location": "srm"
-    }
-    user_client.post('/api/user', json=register_data, headers={"Content-Type": "application/json"})
-    login_data = {
-        "username": "Karan",
-        "password": "Kc5656$ef"
-    }
-    login_response = user_client.post('/api/login', json=login_data, headers={"Content-Type": "application/json"})
-    token=login_response.json['token']
-    assert login_response.status_code == 200  
+def test_get_notes_should_return_success(user_client,token):
     note_data={
         "title": "top movies",
         "description": "inception",
@@ -51,40 +23,12 @@ def test_get_notes_should_return_success(user_client):
     assert notes_get_response.status_code == 200
     assert notes_get_response.json['message'] == 'Notes Found'
 
-def test_get_notes_should_return_failure(user_client):
-    register_data = {
-        "username": "Karan",
-        "email": "joshikfelix22@gmail.com",
-        "password": "Kc5656$ef",
-        "location": "srm"
-    }
-    user_client.post('/api/user', json=register_data, headers={"Content-Type": "application/json"})
-    login_data = {
-        "username": "Karan",
-        "password": "Kc5656$ef"
-    }
-    login_response = user_client.post('/api/login', json=login_data, headers={"Content-Type": "application/json"})
-    token=login_response.json['token']
-    assert login_response.status_code == 200  
+def test_get_notes_should_return_failure(user_client,token): 
     notes_get_response = user_client.get('/api/notes',headers={"Content-Type": "application/json",
     "Authorization":token})
     assert notes_get_response.status_code == 404
 
-def test_update_note_should_return_suceess(user_client):
-    register_data = {
-        "username": "Karan",
-        "email": "joshikfelix22@gmail.com",
-        "password": "Kc5656$ef",
-        "location": "srm"
-    }
-    user_client.post('/api/user', json=register_data, headers={"Content-Type": "application/json"})
-    login_data = {
-        "username": "Karan",
-        "password": "Kc5656$ef"
-    }
-    login_response = user_client.post('/api/login', json=login_data, headers={"Content-Type": "application/json"})
-    token=login_response.json['token']
-    assert login_response.status_code == 200  
+def test_update_note_should_return_suceess(user_client,token): 
     note_data={
         "title": "top movies",
         "description": "inception",
@@ -104,21 +48,7 @@ def test_update_note_should_return_suceess(user_client):
     assert update_response.status_code == 200
     assert update_response.json['message'] == 'Note updated successfully'
 
-def test_get_single_note_should_return_success(user_client):
-    register_data = {
-        "username": "Karan",
-        "email": "joshikfelix22@gmail.com",
-        "password": "Kc5656$ef",
-        "location": "srm"
-    }
-    user_client.post('/api/user', json=register_data, headers={"Content-Type": "application/json"})
-    login_data = {
-        "username": "Karan",
-        "password": "Kc5656$ef"
-    }
-    login_response = user_client.post('/api/login', json=login_data, headers={"Content-Type": "application/json"})
-    token=login_response.json['token']
-    assert login_response.status_code == 200  
+def test_get_single_note_should_return_success(user_client,token):  
     note_data={
         "title": "top movies",
         "description": "inception",
@@ -139,21 +69,7 @@ def test_get_single_note_should_return_success(user_client):
     assert get_single_response.status_code == 200
     assert get_single_response.json['message'] == 'Notes found' or get_single_response.json['message'] == 'Shared Notes found'
 
-def test_delete_note_should_return_success(user_client):
-    register_data = {
-        "username": "Karan",
-        "email": "joshikfelix22@gmail.com",
-        "password": "Kc5656$ef",
-        "location": "srm"
-    }
-    user_client.post('/api/user', json=register_data, headers={"Content-Type": "application/json"})
-    login_data = {
-        "username": "Karan",
-        "password": "Kc5656$ef"
-    }
-    login_response = user_client.post('/api/login', json=login_data, headers={"Content-Type": "application/json"})
-    token=login_response.json['token']
-    assert login_response.status_code == 200  
+def test_delete_note_should_return_success(user_client,token):
     note_data={
         "title": "top movies",
         "description": "inception",
@@ -173,21 +89,7 @@ def test_delete_note_should_return_success(user_client):
     delete_response = user_client.delete('/api/notes/2', headers={"Content-Type": "application/json","Authorization": token})
     assert delete_response.status_code == 204
     
-def test_archive_note_should_return_success(user_client):
-    register_data = {
-        "username": "Karan",
-        "email": "joshikfelix22@gmail.com",
-        "password": "Kc5656$ef",
-        "location": "srm"
-    }
-    user_client.post('/api/user', json=register_data, headers={"Content-Type": "application/json"})
-    login_data = {
-        "username": "Karan",
-        "password": "Kc5656$ef"
-    }
-    login_response = user_client.post('/api/login', json=login_data, headers={"Content-Type": "application/json"})
-    token=login_response.json['token']
-    assert login_response.status_code == 200  
+def test_archive_note_should_return_success(user_client,token): 
     note_data={
         "title": "top movies",
         "description": "inception",
@@ -202,21 +104,7 @@ def test_archive_note_should_return_success(user_client):
     assert archive_response.status_code == 200
     assert archive_response.json['message'] == 'Note is archived'
 
-def test_unarchive_note_should_return_success(user_client):
-    register_data = {
-        "username": "Karan",
-        "email": "joshikfelix22@gmail.com",
-        "password": "Kc5656$ef",
-        "location": "srm"
-    }
-    user_client.post('/api/user', json=register_data, headers={"Content-Type": "application/json"})
-    login_data = {
-        "username": "Karan",
-        "password": "Kc5656$ef"
-    }
-    login_response = user_client.post('/api/login', json=login_data, headers={"Content-Type": "application/json"})
-    token=login_response.json['token']
-    assert login_response.status_code == 200  
+def test_unarchive_note_should_return_success(user_client,token):
     note_data={
         "title": "top movies",
         "description": "inception",
@@ -237,21 +125,7 @@ def test_unarchive_note_should_return_success(user_client):
 
    
 
-def test_get_archived_notes_should_return_success(user_client):
-    register_data = {
-        "username": "Karan",
-        "email": "joshikfelix22@gmail.com",
-        "password": "Kc5656$ef",
-        "location": "srm"
-    }
-    user_client.post('/api/user', json=register_data, headers={"Content-Type": "application/json"})
-    login_data = {
-        "username": "Karan",
-        "password": "Kc5656$ef"
-    }
-    login_response = user_client.post('/api/login', json=login_data, headers={"Content-Type": "application/json"})
-    token=login_response.json['token']
-    assert login_response.status_code == 200  
+def test_get_archived_notes_should_return_success(user_client,token):
     note_data={
         "title": "top movies",
         "description": "inception",
@@ -284,21 +158,7 @@ def test_get_archived_notes_should_return_success(user_client):
     assert get_archive_notes_response.json['message'] == 'Retrieved archive notes'
     assert isinstance(get_archive_notes_response.json['data'], list)
 
-def test_archive_note_not_found_should_return_success(user_client):
-    register_data = {
-        "username": "Karan",
-        "email": "joshikfelix22@gmail.com",
-        "password": "Kc5656$ef",
-        "location": "srm"
-    }
-    user_client.post('/api/user', json=register_data, headers={"Content-Type": "application/json"})
-    login_data = {
-        "username": "Karan",
-        "password": "Kc5656$ef"
-    }
-    login_response = user_client.post('/api/login', json=login_data, headers={"Content-Type": "application/json"})
-    token=login_response.json['token']
-    assert login_response.status_code == 200  
+def test_archive_note_not_found_should_return_success(user_client,token):
     note_data={
         "title": "top movies",
         "description": "inception",
@@ -322,21 +182,7 @@ def test_archive_note_not_found_should_return_success(user_client):
 
 
 
-def test_trash_note_should_return_success(user_client):
-    register_data = {
-        "username": "Karan",
-        "email": "joshikfelix22@gmail.com",
-        "password": "Kc5656$ef",
-        "location": "srm"
-    }
-    user_client.post('/api/user', json=register_data, headers={"Content-Type": "application/json"})
-    login_data = {
-        "username": "Karan",
-        "password": "Kc5656$ef"
-    }
-    login_response = user_client.post('/api/login', json=login_data, headers={"Content-Type": "application/json"})
-    token=login_response.json['token']
-    assert login_response.status_code == 200  
+def test_trash_note_should_return_success(user_client,token):
     note_data={
         "title": "top movies",
         "description": "inception",
@@ -351,21 +197,7 @@ def test_trash_note_should_return_success(user_client):
     assert trash_response.status_code == 200
     assert trash_response.json['message'] == 'Note moved to Trash'
 
-def test_restore_trash_note_should_return_success(user_client):
-    register_data = {
-        "username": "Karan",
-        "email": "joshikfelix22@gmail.com",
-        "password": "Kc5656$ef",
-        "location": "srm"
-    }
-    user_client.post('/api/user', json=register_data, headers={"Content-Type": "application/json"})
-    login_data = {
-        "username": "Karan",
-        "password": "Kc5656$ef"
-    }
-    login_response = user_client.post('/api/login', json=login_data, headers={"Content-Type": "application/json"})
-    token=login_response.json['token']
-    assert login_response.status_code == 200  
+def test_restore_trash_note_should_return_success(user_client,token):
     note_data={
         "title": "top movies",
         "description": "inception",
@@ -386,21 +218,7 @@ def test_restore_trash_note_should_return_success(user_client):
 
 
 
-def test_get_trash_notes_should_return_success(user_client):
-    register_data = {
-        "username": "Karan",
-        "email": "joshikfelix22@gmail.com",
-        "password": "Kc5656$ef",
-        "location": "srm"
-    }
-    user_client.post('/api/user', json=register_data, headers={"Content-Type": "application/json"})
-    login_data = {
-        "username": "Karan",
-        "password": "Kc5656$ef"
-    }
-    login_response = user_client.post('/api/login', json=login_data, headers={"Content-Type": "application/json"})
-    token=login_response.json['token']
-    assert login_response.status_code == 200  
+def test_get_trash_notes_should_return_success(user_client,token): 
     note_data={
         "title": "top movies",
         "description": "inception",
@@ -433,21 +251,7 @@ def test_get_trash_notes_should_return_success(user_client):
     assert get_trash_notes_response.json['message'] == 'Retrieved trash notes'
     assert isinstance(get_trash_notes_response.json['data'], list)
 
-def test_trash_note_not_found_should_return_success(user_client):
-    register_data = {
-        "username": "Karan",
-        "email": "joshikfelix22@gmail.com",
-        "password": "Kc5656$ef",
-        "location": "srm"
-    }
-    user_client.post('/api/user', json=register_data, headers={"Content-Type": "application/json"})
-    login_data = {
-        "username": "Karan",
-        "password": "Kc5656$ef"
-    }
-    login_response = user_client.post('/api/login', json=login_data, headers={"Content-Type": "application/json"})
-    token=login_response.json['token']
-    assert login_response.status_code == 200  
+def test_trash_note_not_found_should_return_success(user_client,token): 
     note_data={
         "title": "top movies",
         "description": "inception",
@@ -469,40 +273,8 @@ def test_trash_note_not_found_should_return_success(user_client):
     assert get_trash_notes_response.status_code == 404
     assert get_trash_notes_response.json['message'] == 'Notes not found'
 
-def test_add_collaboration_should_return_success(user_client):
-    register_data = {
-        "username": "Karan",
-        "email": "joshikfelix22@gmail.com",
-        "password": "Kc5656$ef",
-        "location": "srm"
-    }
-    response=user_client.post('/api/user', json=register_data, headers={"Content-Type": "application/json"})
-    assert response.status_code == 201
-    register_data_2 = {
-        "username": "Chandu",
-        "email": "chandufelix22@gmail.com",
-        "password": "Abv4&uuuuu",
-        "location": "srm"
-    }
-    response=user_client.post('/api/user', json=register_data_2, headers={"Content-Type": "application/json"})
-    assert response.status_code == 201
-
-    register_data_3 = {
-        "username": "Deepak",
-        "email": "deepakfelix22@gmail.com",
-        "password": "K5656$fjjjjj",
-        "location": "srm"
-    }
-    response=user_client.post('/api/user', json=register_data_3, headers={"Content-Type": "application/json"})
-    assert response.status_code == 201
-
-    login_data = {
-        "username": "Karan",
-        "password": "Kc5656$ef"
-    }
-    login_response = user_client.post('/api/login', json=login_data, headers={"Content-Type": "application/json"})
-    token=login_response.json['token']
-    assert login_response.status_code == 200  
+def test_add_collaboration_should_return_success(user_client,collaborate_token):
+    token=collaborate_token
     note_data={
         "title": "top movies",
         "description": "inception",
@@ -519,40 +291,8 @@ def test_add_collaboration_should_return_success(user_client):
     "Authorization": token})
     assert collaborate_response.status_code == 201
 
-def test_delete_collaboration_should_return_success(user_client):
-    register_data = {
-        "username": "Karan",
-        "email": "joshikfelix22@gmail.com",
-        "password": "Kc5656$ef",
-        "location": "srm"
-    }
-    response=user_client.post('/api/user', json=register_data, headers={"Content-Type": "application/json"})
-    assert response.status_code == 201
-    register_data_2 = {
-        "username": "Chandu",
-        "email": "chandufelix22@gmail.com",
-        "password": "Abv4&uuuuu",
-        "location": "srm"
-    }
-    response=user_client.post('/api/user', json=register_data_2, headers={"Content-Type": "application/json"})
-    assert response.status_code == 201
-
-    register_data_3 = {
-        "username": "Deepak",
-        "email": "deepakfelix22@gmail.com",
-        "password": "K5656$fjjjjj",
-        "location": "srm"
-    }
-    response=user_client.post('/api/user', json=register_data_3, headers={"Content-Type": "application/json"})
-    assert response.status_code == 201
-
-    login_data = {
-        "username": "Karan",
-        "password": "Kc5656$ef"
-    }
-    login_response = user_client.post('/api/login', json=login_data, headers={"Content-Type": "application/json"})
-    token=login_response.json['token']
-    assert login_response.status_code == 200  
+def test_delete_collaboration_should_return_success(user_client,collaborate_token):
+    token=collaborate_token
     note_data={
         "title": "top movies",
         "description": "inception",
@@ -576,40 +316,8 @@ def test_delete_collaboration_should_return_success(user_client):
     "Authorization": token})
     assert delete_collaboration_response.status_code == 201
 
-def test_add_colabration_to_same_user_should_return_failure(user_client):
-    register_data = {
-        "username": "Karan",
-        "email": "joshikfelix22@gmail.com",
-        "password": "Kc5656$ef",
-        "location": "srm"
-    }
-    response=user_client.post('/api/user', json=register_data, headers={"Content-Type": "application/json"})
-    assert response.status_code == 201
-    register_data_2 = {
-        "username": "Chandu",
-        "email": "chandufelix22@gmail.com",
-        "password": "Abv4&uuuuu",
-        "location": "srm"
-    }
-    response=user_client.post('/api/user', json=register_data_2, headers={"Content-Type": "application/json"})
-    assert response.status_code == 201
-
-    register_data_3 = {
-        "username": "Deepak",
-        "email": "deepakfelix22@gmail.com",
-        "password": "K5656$fjjjjj",
-        "location": "srm"
-    }
-    response=user_client.post('/api/user', json=register_data_3, headers={"Content-Type": "application/json"})
-    assert response.status_code == 201
-
-    login_data = {
-        "username": "Karan",
-        "password": "Kc5656$ef"
-    }
-    login_response = user_client.post('/api/login', json=login_data, headers={"Content-Type": "application/json"})
-    token=login_response.json['token']
-    assert login_response.status_code == 200  
+def test_add_colabration_to_same_user_should_return_failure(user_client,collaborate_token):
+    token=collaborate_token
     note_data={
         "title": "top movies",
         "description": "inception",
@@ -626,40 +334,8 @@ def test_add_colabration_to_same_user_should_return_failure(user_client):
     "Authorization": token})
     assert collaborate_response.status_code == 403
 
-def test_delete_collaborate_on_same_user_should_return_failure(user_client):
-    register_data = {
-        "username": "Karan",
-        "email": "joshikfelix22@gmail.com",
-        "password": "Kc5656$ef",
-        "location": "srm"
-    }
-    response=user_client.post('/api/user', json=register_data, headers={"Content-Type": "application/json"})
-    assert response.status_code == 201
-    register_data_2 = {
-        "username": "Chandu",
-        "email": "chandufelix22@gmail.com",
-        "password": "Abv4&uuuuu",
-        "location": "srm"
-    }
-    response=user_client.post('/api/user', json=register_data_2, headers={"Content-Type": "application/json"})
-    assert response.status_code == 201
-
-    register_data_3 = {
-        "username": "Deepak",
-        "email": "deepakfelix22@gmail.com",
-        "password": "K5656$fjjjjj",
-        "location": "srm"
-    }
-    response=user_client.post('/api/user', json=register_data_3, headers={"Content-Type": "application/json"})
-    assert response.status_code == 201
-
-    login_data = {
-        "username": "Karan",
-        "password": "Kc5656$ef"
-    }
-    login_response = user_client.post('/api/login', json=login_data, headers={"Content-Type": "application/json"})
-    token=login_response.json['token']
-    assert login_response.status_code == 200  
+def test_delete_collaborate_on_same_user_should_return_failure(user_client,collaborate_token):
+    token=collaborate_token
     note_data={
         "title": "top movies",
         "description": "inception",
