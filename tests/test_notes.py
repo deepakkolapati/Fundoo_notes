@@ -49,8 +49,26 @@ def test_get_notes_should_return_success(user_client):
     assert note_response.status_code == 201 
     notes_get_response = user_client.get('/api/notes', headers={"Content-Type": "application/json","Authorization": token})
     assert notes_get_response.status_code == 200
-    print(notes_get_response.json)
     assert notes_get_response.json['message'] == 'Notes Found'
+
+def test_get_notes_should_return_failure(user_client):
+    register_data = {
+        "username": "Karan",
+        "email": "joshikfelix22@gmail.com",
+        "password": "Kc5656$ef",
+        "location": "srm"
+    }
+    user_client.post('/api/user', json=register_data, headers={"Content-Type": "application/json"})
+    login_data = {
+        "username": "Karan",
+        "password": "Kc5656$ef"
+    }
+    login_response = user_client.post('/api/login', json=login_data, headers={"Content-Type": "application/json"})
+    token=login_response.json['token']
+    assert login_response.status_code == 200  
+    notes_get_response = user_client.get('/api/notes',headers={"Content-Type": "application/json",
+    "Authorization":token})
+    assert notes_get_response.status_code == 404
 
 def test_update_note_should_return_suceess(user_client):
     register_data = {
