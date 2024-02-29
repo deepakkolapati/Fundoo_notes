@@ -1,7 +1,7 @@
 import pytest
 from core import init_app,db
 from flask_restx import Api
-from routes import user,notes
+from routes import user,notes,label
 from pathlib import Path
 import os
 
@@ -20,6 +20,8 @@ def user_app():
     api.add_resource(notes.ArchiveApi, '/api/archive')
     api.add_resource(notes.TrashApi, '/api/trash')
     api.add_resource(notes.CollaborateApi,'/api/collaborate')
+    api.add_resource(label.LabelApi, '/api/labels')
+    api.add_resource(label.LabelDeleteApi,'/api/labels/<int:id>')
     yield app
     with app.app_context():
         db.drop_all()
