@@ -142,5 +142,24 @@ def test_verify_user_with_invalid_token_should_return_success_response(user_clie
     verify_response = user_client.get(f'/api/user?token={token}')
     assert verify_response.status_code == 401
 
+def test_delete_user_should_return_success(user_client):
+    # Register a user to get a valid token
+    register_data = {
+        "username": "TestUser",
+        "email": "testuser@example.com",
+        "password": "Secure@Pass123!",
+        "location": "TestCity"
+    }
+    register_response = user_client.post('/api/user', json=register_data, headers={"Content-Type": "application/json"})
+    assert register_response.status_code == 201
+
+    delete_data={
+        "username": "TestUser",
+        "password": "Secure@Pass123!"
+    }
+    delete_response=user_client.delete('/api/user',json=delete_data,headers={"Content-Type": "application/json"})
+    assert delete_response.status_code == 204
+
+
 
   
