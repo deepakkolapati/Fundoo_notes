@@ -558,3 +558,109 @@ def test_delete_collaboration_should_return_success(user_client):
     "Authorization": token})
     assert delete_collaboration_response.status_code == 201
 
+def test_add_colabration_to_same_user_should_return_failure(user_client):
+    register_data = {
+        "username": "Karan",
+        "email": "joshikfelix22@gmail.com",
+        "password": "Kc5656$ef",
+        "location": "srm"
+    }
+    response=user_client.post('/api/user', json=register_data, headers={"Content-Type": "application/json"})
+    assert response.status_code == 201
+    register_data_2 = {
+        "username": "Chandu",
+        "email": "chandufelix22@gmail.com",
+        "password": "Abv4&uuuuu",
+        "location": "srm"
+    }
+    response=user_client.post('/api/user', json=register_data_2, headers={"Content-Type": "application/json"})
+    assert response.status_code == 201
+
+    register_data_3 = {
+        "username": "Deepak",
+        "email": "deepakfelix22@gmail.com",
+        "password": "K5656$fjjjjj",
+        "location": "srm"
+    }
+    response=user_client.post('/api/user', json=register_data_3, headers={"Content-Type": "application/json"})
+    assert response.status_code == 201
+
+    login_data = {
+        "username": "Karan",
+        "password": "Kc5656$ef"
+    }
+    login_response = user_client.post('/api/login', json=login_data, headers={"Content-Type": "application/json"})
+    token=login_response.json['token']
+    assert login_response.status_code == 200  
+    note_data={
+        "title": "top movies",
+        "description": "inception",
+        "color":"yellow"
+    }
+    note_response = user_client.post('/api/notes', json=note_data, headers={"Content-Type": "application/json",
+    "Authorization": token})
+    assert note_response.status_code == 201
+    collaborator_data = {
+        "id": 1,
+        "user_ids": [1, 3]
+    }
+    collaborate_response = user_client.post('/api/collaborate', json=collaborator_data, headers={"Content-Type": "application/json",
+    "Authorization": token})
+    assert collaborate_response.status_code == 403
+
+def test_delete_collaborate_on_same_user_should_return_failure(user_client):
+    register_data = {
+        "username": "Karan",
+        "email": "joshikfelix22@gmail.com",
+        "password": "Kc5656$ef",
+        "location": "srm"
+    }
+    response=user_client.post('/api/user', json=register_data, headers={"Content-Type": "application/json"})
+    assert response.status_code == 201
+    register_data_2 = {
+        "username": "Chandu",
+        "email": "chandufelix22@gmail.com",
+        "password": "Abv4&uuuuu",
+        "location": "srm"
+    }
+    response=user_client.post('/api/user', json=register_data_2, headers={"Content-Type": "application/json"})
+    assert response.status_code == 201
+
+    register_data_3 = {
+        "username": "Deepak",
+        "email": "deepakfelix22@gmail.com",
+        "password": "K5656$fjjjjj",
+        "location": "srm"
+    }
+    response=user_client.post('/api/user', json=register_data_3, headers={"Content-Type": "application/json"})
+    assert response.status_code == 201
+
+    login_data = {
+        "username": "Karan",
+        "password": "Kc5656$ef"
+    }
+    login_response = user_client.post('/api/login', json=login_data, headers={"Content-Type": "application/json"})
+    token=login_response.json['token']
+    assert login_response.status_code == 200  
+    note_data={
+        "title": "top movies",
+        "description": "inception",
+        "color":"yellow"
+    }
+    note_response = user_client.post('/api/notes', json=note_data, headers={"Content-Type": "application/json",
+    "Authorization": token})
+    assert note_response.status_code == 201
+    collaborator_data = {
+        "id": 1,
+        "user_ids": [2, 3]
+    }
+    collaborate_response = user_client.post('/api/collaborate', json=collaborator_data, headers={"Content-Type": "application/json",
+    "Authorization": token})
+    assert collaborate_response.status_code == 201
+    delete_collaboration_data = {
+        "id": 1,
+        "user_ids": [1, 3]
+    }
+    delete_collaboration_response = user_client.delete('/api/collaborate', json=delete_collaboration_data, headers={"Content-Type": "application/json",
+    "Authorization": token})
+    assert delete_collaboration_response.status_code == 403
