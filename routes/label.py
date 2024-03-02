@@ -1,6 +1,6 @@
 from core import db, init_app
 from flask import request, jsonify
-from core.models import Label
+from core.models import Label,Notes
 from pydantic import ValidationError
 from flask_restx import Api, Resource,fields
 from schemas.note_schemas import NoteValidator
@@ -11,6 +11,8 @@ from sqlalchemy import text
 import psycopg2
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from sqlalchemy.exc import IntegrityError
+
 
 app = init_app()
 api = Api(app=app, prefix='/api',
@@ -127,13 +129,79 @@ class LabelApi(Resource):
         """
 
         try:
-            user_id= kwargs["user_id"]
-            query= db.session.execute(text(f"SELECT * FROM labels WHERE user_id = {user_id}"))
-            labels=list(map(dict, query.mappings().all()))
+            labels=Label.query.filter_by(user_id=kwargs["user_id"]).all()
             if labels:
-                return {"message":"Labels found","status":200,
-                    "data": labels},200
-            return {"message":"Labels not found","status":404},404
-        except Exception as e :
+                label_notes=[]
+                for label in labels:
+                    notes=[note.json for note in label.c_notes]
+                    label_notes.append({"label_name":label.name,"notes":notes})
+                return {"message":"Labels found","labels": label_notes,"status": 200},200
+
+            return {"message" : "Labels are not found", "status": 404},404
+        except Exception as e:
             app.logger.exception(e,exc_info=False)
             return {"message": str(e), "status": 500}, 500
+
+@api.route("/association")
+class AssociationApi(Resource):
+    method_decorators=(authorize_user,)
+
+    @api.expect(api.model("AddNotesLabel",{"id":fields.Integer(),"note_ids": fields.List(fields.Integer)}))
+    def post(self,*args,**kwargs):
+        try:
+            data=request.json
+            label=Label.query.filter_by(id=data["id"],user_id=data["user_id"]).first()
+            if not label:
+                return {"message":"Label not found","status":404},404
+
+            notes_to_associate=[Notes.query.filter_by(id=id,user_id=data["user_id"]).first() #
+            for id in data["note_ids"]]
+            
+            if notes_to_associate:
+                label.c_notes.extend(notes_to_associate)
+                db.session.commit()
+                note_ids=[note.id for note in notes_to_associate]
+                return {"message":f"Label_{label.id} is associated successfully with notes {','.join(map(str,note_ids))}",
+                "status" : 201},201
+            return {"message":"Label can't be associated with the given notes"}
+
+        except IntegrityError as e:
+            app.logger.exception(e,exc_info=False)
+            return {"message": str(e), "status": 409}, 409
+        except Exception as e:
+            app.logger.exception(e,exc_info=False)
+            return {"message": str(e), "status": 500}, 500
+    
+    @api.expect(api.model("DeleteNotesLabel",{"id":fields.Integer(),"note_ids": fields.List(fields.Integer)}))
+    def delete(self,*args,**kwargs):
+        try:
+            data=request.json
+            label=Label.query.filter_by(id=data["id"],user_id=kwargs["user_id"]).first()
+            if not label:
+                return {"message":"Label not found","status":404},404
+            
+            notes_to_disassociate=[Notes.query.filter_by(id=id,user_id=kwargs["user_id"]).first() #
+            for id in data["note_ids"]]
+
+            if notes_to_disassociate:
+                [label.c_notes.remove(note) for note in notes_to_disassociate]
+                note_ids=[note.id for note in notes_to_disassociate]
+                db.session.commit()
+                return {"message":f"Label_{label.id} is disassociated successfully with notes {','.join(map(str,note_ids))} ",
+                 "status":204},204
+            
+            return {"message":"Label can't be disassociated with the given notes"}
+        except Exception as e:
+            app.logger.exception(e,exc_info=False)
+            return {"message": str(e), "status": 500}, 500
+
+
+
+
+            
+
+
+            
+
+
+
