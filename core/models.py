@@ -16,6 +16,14 @@ collaborators = db.Table(
     UniqueConstraint("user_id", "note_id", name="unique_user_note")
 )
 
+labelnotes=db.Table(
+      "labelnotes",
+      db.metadata,
+      db.Column("note_id", db.ForeignKey("notes.id",ondelete="CASCADE")),
+      db.Column("label_id", db.ForeignKey("labels.id",ondelete="CASCADE")),
+      UniqueConstraint("note_id", "label_id", name="unique_label_note")
+)
+
 class User(db.Model):
     __tablename__="users"
     id=db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -65,7 +73,8 @@ class Notes(db.Model):
     is_trash=db.Column(db.Boolean, default=False)
     user_id=db.Column(db.Integer,db.ForeignKey('users.id', ondelete="CASCADE"),nullable=False)
     user=db.relationship('User',back_populates="note")
-    c_users: Mapped[List[User]] =db.relationship(secondary=collaborators,back_populates="c_notes")
+    c_users: Mapped[List['User']] =db.relationship(secondary=collaborators,back_populates="c_notes")
+    c_labels: Mapped[List['Label']] =db.relationship(secondary=labelnotes,back_populates="c_notes")
 
     def __init__(self, title, description, color, user_id, reminder=None, **kwargs):
   
@@ -110,6 +119,7 @@ class Label(db.Model):
     name=db.Column(db.String(50),nullable=False)
     user_id=db.Column(db.Integer,db.ForeignKey('users.id',ondelete='CASCADE'),nullable=False)
     user=db.relationship('User',back_populates='label')
+    c_notes : Mapped[List[Notes]] = db.relationship(secondary=labelnotes,back_populates="c_labels")
     @property
     def json(self):
         return {
