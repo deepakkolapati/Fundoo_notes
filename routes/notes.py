@@ -384,14 +384,12 @@ class CollaborateApi(Resource):
                 return {"message":"Note not found","status":404},404
             try:
                 users_to_add = [User.query.filter_by(id=id).first() for id in data["user_ids"]]
-                existing_collaborators=set(note.c_users)
-                users_to_add=[user for user in users_to_add if user not in existing_collaborators]
                 note.c_users.extend(users_to_add)
                 db.session.commit()
                 added_users=[user.id for user in users_to_add]
                 if added_users:
                     return {"message":f"Note_{note.id} shared with users {",".join(map(str,added_users))}", "status": 201},201
-                return {"message" : "Note can't be shared with the users who already have access","status":403},403
+                return {"message" : "Note can't be shared with the given users","status":403},403
             except IntegrityError as e:
                 app.logger.exception(e,exc_info=False)
                 return {"message":str(e),"status":409},409
@@ -426,14 +424,12 @@ class CollaborateApi(Resource):
                 return {"message":"Note not found","status":404},404
             try:
                 users_to_delete=[User.query.filter_by(id=id).first() for id in data["user_ids"]]
-                existing_collaborators=set(note.c_users)
-                users_to_delete=[user for user in users_to_delete if user in existing_collaborators]
                 [note.c_users.remove(user) for user in users_to_delete]
                 db.session.commit()
                 deleted_users=[user.id for user in users_to_delete]
                 if deleted_users:
                     return {"message":f"Note_{note.id} access removed from users {",".join(map(str,deleted_users))}", "status": 201},201
-                return {"message" : "Note can't be removed from the users who don't have access","status":403},403
+                return {"message" : "Note sharing can't be removed from the given users","status":403},403
             except sqlalchemy.exc.IntegrityError as e:
                 app.logger.exception(e,exc_info=False)
                 return {"message":str(e),"status":409},409
